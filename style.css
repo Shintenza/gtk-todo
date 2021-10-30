@@ -1,0 +1,56 @@
+#side_menu {
+    padding-top: 10px;
+    padding-left: 10px;
+}
+#tasks_box {
+    background: #595959;
+    padding: 10px;
+}
+#add_task_box {
+    background-color: #282828;
+    padding-top: 10px;
+    padding-left: 10px;
+    padding-bottom: 10px;
+    padding-right: 10px;
+    color: white;
+}
+window {
+    background-color: #282828;
+} 
+#header {
+    background: #202020;
+    color: white;
+    border-bottom: none;
+}
+button {
+    background: none;
+    border: solid 2px white;
+    border-radius: 20px;
+    color: white;
+    transition: .5s;
+}
+button:hover {
+    background: #424242;
+}
+entry {
+    background: none;
+    border-radius: 20px;
+    border: white solid 2px;
+    color: white;
+}
+#dialog {
+    padding: 20px;
+    color: white;
+}
+#single_task_box {
+    color: white;
+    background-color: #282828;
+    padding: 10px;
+}
+#single_task_box label:first-child {
+    font-weight: bold;
+    font-size: 20px;
+}
+scrollbar slider {
+    background: white;
+}

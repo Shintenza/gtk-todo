@@ -1,0 +1,3 @@
+/home/kamil/Projects/gtk_todo/CMakeFiles/rebuild_cache.dir
+/home/kamil/Projects/gtk_todo/CMakeFiles/edit_cache.dir
+/home/kamil/Projects/gtk_todo/CMakeFiles/c_todo.dir
