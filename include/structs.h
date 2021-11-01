@@ -18,4 +18,11 @@ struct CreateNewTaskBoxParams {
     const char *task_desc;
     const char *date_string;
 };
+struct HandleDate {
+    GtkWidget *popover_box;
+    GtkWidget *add_task_box;
+    GtkWidget *calendar;
+    GtkWidget *hour_input;
+    GtkWidget *min_input;
+};
 #endif

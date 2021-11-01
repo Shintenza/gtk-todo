@@ -54,3 +54,20 @@ entry {
 scrollbar slider {
     background: white;
 }
+popover {
+    background: #282828;
+    border: none;
+    color: white;
+}
+popover calendar,
+popover spinbutton {
+    background: #595959;
+    color: white;
+}
+popover calendar button,
+popover spinbutton button {
+    border-radius: none;
+}
+popover contents {
+    background: #282828;
+}

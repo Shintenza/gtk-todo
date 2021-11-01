@@ -77,8 +77,18 @@ void data_handler(GtkWidget *button, gpointer data) {
     }
 }
 void date_handler (GtkMenuButton *button, gpointer data) {
-    GtkWidget *parent_element = data;
-
+    struct HandleDate *params = data;
+    GDateTime *date = gtk_calendar_get_date(GTK_CALENDAR(params->calendar));
+    int day = g_date_time_get_day_of_month(date);
+    int month = g_date_time_get_month(date);
+    int year = g_date_time_get_year(date);
+    int hour = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(params->hour_input));
+    int min = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(params->min_input));
+    GTimeZone *time_zone = g_time_zone_new_local();
+    GDateTime *date_now = g_date_time_new_now(time_zone);
+    int day_now = g_date_time_get_day_of_month(date_now);
+    int month_now = g_date_time_get_month(date_now);
+    printf("%d %d\n", day_now, month_now);
 }
 void add_new_task(GtkWidget *button, gpointer data) {
     if(!is_add_task_active) {
@@ -90,7 +100,9 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *popover_box;
         GtkWidget *popover_sub_box;
         GtkWidget *calendar;
-        GtkWidget *spin_button;
+        GtkWidget *spin_button_hour;
+        GtkWidget *spin_button_min;
+        GtkWidget *button;
 
         GtkWidget *add_task_box, *task_name_entry, *task_desc_entry, *add_button, *label;
         GtkEntryBuffer *task_name_buffer, *task_desc_buffer;
@@ -119,6 +131,8 @@ void add_new_task(GtkWidget *button, gpointer data) {
         params.add_task_box = add_task_box;
         
         gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
+        gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
+        gtk_menu_button_set_always_show_arrow(GTK_MENU_BUTTON(add_date_button), FALSE);
 
         g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &params);
         
@@ -133,19 +147,29 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_box_prepend(GTK_BOX(tasks_box), add_task_box);
         is_add_task_active= !is_add_task_active;
         
+        gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
         popover_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
         gtk_popover_set_child(GTK_POPOVER(popover), GTK_WIDGET(popover_box));
         calendar = gtk_calendar_new();
         gtk_box_append(GTK_BOX(popover_box), calendar);
         label = gtk_label_new("Ustaw godzinę/minutę");
         gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(label));
-        spin_button = gtk_spin_button_new_with_range(0, 24, 1);
+        spin_button_hour = gtk_spin_button_new_with_range(0, 24, 1);
         popover_sub_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button));
-        spin_button = gtk_spin_button_new_with_range(0, 60, 1);
-        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button));
+        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button_hour));
+        spin_button_min= gtk_spin_button_new_with_range(0, 60, 1);
+        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button_min));
         gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(popover_sub_box));
+        button = gtk_button_new_with_label("Potwierdź");
+        gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(button));
         
+        static struct HandleDate date_params;
+        date_params.add_task_box = add_task_box;
+        date_params.calendar = calendar;
+        date_params.hour_input = spin_button_hour;
+        date_params.min_input = spin_button_min;
+        date_params.popover_box = popover_box;
+        g_signal_connect(button, "clicked", G_CALLBACK(date_handler), &date_params);
     }
 
 }
