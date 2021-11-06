@@ -64,9 +64,10 @@ popover spinbutton {
     background: #595959;
     color: white;
 }
-popover calendar button,
-popover spinbutton button {
-    border-radius: none;
+calendar button,
+spinbutton button {
+    border-radius: 0;
+    border: none;
 }
 popover contents {
     background: #282828;
