@@ -1,6 +1,13 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 #include <gtk/gtk.h>
+#include <sqlite3.h>
+
+struct DbElements {
+    char *err_msg;
+    sqlite3 *db; 
+    int rc;
+};
 struct TaskDataParams {
     GtkEntryBuffer *task_name_buffer;
     GtkEntryBuffer *task_desc_buffer;
@@ -9,11 +16,14 @@ struct TaskDataParams {
     GtkWidget *add_task_box;
     GtkWidget *date_label;
     GtkWidget *time_label;
+    struct DbElements *db_elements;
     char * string_date;
+    gint64 unix_datetime;
 };
 struct AddNewTaskParams {
    GtkWidget *window;
    GtkWidget *tasks_box;
+   struct DbElements *db_elements;
 };
 struct CreateNewTaskBoxParams {
     GtkWidget *tasks_box;

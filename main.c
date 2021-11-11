@@ -3,17 +3,14 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <time.h>
+#include <sqlite3.h>
 /* #include "include/connect_db.h" */
 /* #include "include/add_data.h" */
 #include "include/structs.h"
 
 bool is_add_task_active = false;
 bool sent_wrong_date_alert = false; 
-void get_data(GtkButton *button, gpointer data) {
-    struct TaskDataParams *params = data; 
-    const gchar *task_name = gtk_entry_buffer_get_text(GTK_ENTRY_BUFFER(params->task_name_buffer));
-    printf("%s\n", task_name);
-}
+
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     struct ResetWrongDateAlertBoxParams *params = data;
     if(sent_wrong_date_alert) {
@@ -21,7 +18,7 @@ void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
         gtk_box_remove(GTK_BOX(params->popover_box), params->warning_label);
     }
 }
-void create_new_task_box(const struct CreateNewTaskBoxParams *params) {
+void create_new_task_box(struct CreateNewTaskBoxParams *params) {
     GtkWidget *tasks_box = params->tasks_box;
     const char *task_name = params->task_name;
     const char *task_desc = params->task_desc;
@@ -51,6 +48,7 @@ void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *add_task_box = params->add_task_box;
     const gchar *task_name = gtk_entry_buffer_get_text(task_name_buffer);
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
+    struct DbElements *db_elements = params->db_elements;
 
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
@@ -83,6 +81,18 @@ void data_handler(GtkWidget *button, gpointer data) {
         create_new_task_box(&fn_params);
         is_add_task_active = false;
         gtk_box_remove(GTK_BOX(tasks_box), add_task_box);
+        /* add task to db */ 
+        /* "INSERT INTO tasks VALUES ('Zaliczyć projekt z C', 'xDD', strftime('%s', 'now'), 'normal', 0);"; */
+        char *sql = malloc(sizeof(char)*1000);
+        sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, params->string_date, params->unix_datetime);
+    
+        db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
+        free(sql);
+        if( db_elements->rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db_elements->db));
+            sqlite3_close(db_elements->db);
+        }
+
     }
 }
 void date_handler (GtkMenuButton *button, gpointer data) {
@@ -175,6 +185,7 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         strcat(complete_date, " ");
         strcat(complete_date, time_string);
         params->params->string_date =  complete_date;
+        params->params->unix_datetime = g_date_time_to_unix(selected_date);
         gtk_popover_popdown(GTK_POPOVER(params->popover));
         gtk_menu_button_set_label(GTK_MENU_BUTTON(params->add_date_button), "Zmień datę");
     } 
@@ -192,9 +203,9 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *spin_button_hour;
         GtkWidget *spin_button_min;
         GtkWidget *button;
-
         GtkWidget *add_task_box, *task_name_entry, *task_desc_entry, *add_button, *label;
         GtkEntryBuffer *task_name_buffer, *task_desc_buffer;
+        struct DbElements *db_elements = add_new_task_params->db_elements;
         
 
         add_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -219,6 +230,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         params.window = parent_window;
         params.tasks_box = tasks_box;
         params.add_task_box = add_task_box;
+        params.db_elements = db_elements;
 
         gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
         gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
@@ -270,7 +282,33 @@ void add_new_task(GtkWidget *button, gpointer data) {
     }
 
 }
+int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name) {
+    GtkWidget *tasks_box = args;
+    char *task_name = argv[0];
+    char *task_desc = argv[1];
+    char *date_string = argv[2];
+    struct CreateNewTaskBoxParams new_task_box_params;
+    new_task_box_params.task_name = argv[0];
+    new_task_box_params.task_desc = argv[1];
+    new_task_box_params.tasks_box = tasks_box;
+    new_task_box_params.date_string = argv[2];
+    create_new_task_box(&new_task_box_params);
+    return 0;
+};
+void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box) {
+    char *sql = "SELECT * FROM tasks";
+    int rc = db_elements->rc;
+    sqlite3 *db = db_elements->db;
 
+    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, tasks_box, &db_elements->err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
+
+        sqlite3_free(db_elements->err_msg);
+        sqlite3_close(db);
+    }
+}
 
 static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window = gtk_application_window_new(app);
@@ -286,6 +324,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *add_task_button;
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
+    struct DbElements *db_elements = user_data;
 
 
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "style.css");
@@ -338,27 +377,50 @@ static void activate(GtkApplication *app, gpointer user_data) {
     static struct AddNewTaskParams params;
     params.window = window;
     params.tasks_box = tasks_box;
+    params.db_elements = db_elements;
 
 
     
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
+    load_tasks_from_db(db_elements, tasks_box);
     
 
     gtk_window_present (GTK_WINDOW (window));
 }
 
 int main(int argc, char **argv) {
-    /* mongoc_collection_t *collection; */
-    /* mongoc_client_t *client; */
-    /* client = db_connect(); */
-    /* collection = mongoc_client_get_collection(client, "gtk-todo", "tasks"); */
-
-    /* add_data(collection); */
     GtkApplication *app;
     int status;
+    
+    sqlite3 *db;
+    char *err_msg = 0;
+    int rc = sqlite3_open("todo.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot connect to the database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+    char *sql = "CREATE TABLE IF NOT EXISTS tasks (task_name TEXT, \
+                                                   task_desc TEXT, \
+                                                   date_string TEXT,\
+                                                   date INT,       \
+                                                   importance TEXT,\
+                                                   finished BOOLEAN NOT NULL CHECK (finished IN (0, 1)));";
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if( rc != SQLITE_OK ) {
+        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
+         /* sqlite3_free(err_msg); */
+        sqlite3_close(db);
+        return 1;
+    }
+    
+    static struct DbElements db_elements;
+    db_elements.db = db;
+    db_elements.err_msg = err_msg;
+    db_elements.rc = rc;
 
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+    g_signal_connect (app, "activate", G_CALLBACK (activate), &db_elements);
     status = g_application_run (G_APPLICATION (app), argc, argv);
     g_object_unref (app);
 
