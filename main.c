@@ -11,6 +11,31 @@
 bool is_add_task_active = false;
 bool sent_wrong_date_alert = false; 
 
+void archive_task (GtkWidget *button, gpointer data) {
+    struct DbElements *db_elements = data; 
+    GtkWidget *parent = gtk_widget_get_parent(button);
+    const char *string_id = gtk_widget_get_name(parent);
+    
+
+    char *sql = malloc(sizeof(char)*100);
+    char *error;
+    int id = strtol(string_id, &error, 10);
+    sprintf(sql, "DELETE FROM tasks WHERE rowid = %d", id);
+
+    int rc = db_elements->rc;
+    sqlite3 *db = db_elements->db;
+/*  */
+    rc = sqlite3_exec(db, sql, 0, 0, &db_elements->err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Failed to remove data from db\n");
+        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
+
+        sqlite3_free(db_elements->err_msg);
+        sqlite3_close(db);
+    }
+    free(sql);
+}
+
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     struct ResetWrongDateAlertBoxParams *params = data;
     if(sent_wrong_date_alert) {
@@ -18,19 +43,33 @@ void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
         gtk_box_remove(GTK_BOX(params->popover_box), params->warning_label);
     }
 }
-void create_new_task_box(struct CreateNewTaskBoxParams *params) {
+void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *tasks_box = params->tasks_box;
     const char *task_name = params->task_name;
     const char *task_desc = params->task_desc;
     const char *date_string = params->date_string;
+    GtkStyleContext *context;
+
+
+    char string_id[1000];
+    sprintf(string_id, "%d", id);
 
     GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_name(GTK_WIDGET(single_task_box), "single_task_box");
+    context = gtk_widget_get_style_context(single_task_box);
+    gtk_style_context_add_class(context, "single_task_box");
+
+    gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
 
     GtkWidget *task_name_label = gtk_label_new(task_name);
     GtkWidget *task_date_label = gtk_label_new(date_string);
     GtkWidget *task_desc_label = gtk_label_new(task_desc);
     GtkWidget *task_done_button = gtk_button_new_with_label("Ukończone");
+
+    static struct ArchiveTaskParams archive_task_params;
+    archive_task_params.db_elements = params->db_elements;
+
+    g_signal_connect(task_done_button, "clicked", G_CALLBACK(archive_task), params->db_elements);
+    
     gtk_box_append(GTK_BOX(single_task_box), task_name_label);
     gtk_box_append(GTK_BOX(single_task_box), task_desc_label);
     gtk_box_append(GTK_BOX(single_task_box), task_date_label);
@@ -72,21 +111,25 @@ void data_handler(GtkWidget *button, gpointer data) {
         g_signal_connect (dialog, "response", G_CALLBACK (gtk_window_destroy), NULL);
         gtk_widget_show(GTK_WIDGET(dialog));
     } else {
+        /* This static is usless ig */
+        int element_id = sqlite3_last_insert_rowid(db_elements->db) + 1;
+
         static struct CreateNewTaskBoxParams fn_params;
         fn_params.tasks_box = tasks_box;
         fn_params.task_name = task_name;
         fn_params.task_desc = task_desc;
         fn_params.date_string = params->string_date;
+        fn_params.db_elements = db_elements;
 
-        create_new_task_box(&fn_params);
+        create_new_task_box(&fn_params, element_id);
         is_add_task_active = false;
         gtk_box_remove(GTK_BOX(tasks_box), add_task_box);
-        /* add task to db */ 
-        /* "INSERT INTO tasks VALUES ('Zaliczyć projekt z C', 'xDD', strftime('%s', 'now'), 'normal', 0);"; */
+
         char *sql = malloc(sizeof(char)*1000);
         sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, params->string_date, params->unix_datetime);
     
         db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
+
         free(sql);
         if( db_elements->rc != SQLITE_OK ) {
             fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db_elements->db));
@@ -283,24 +326,28 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
 }
 int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name) {
-    GtkWidget *tasks_box = args;
-    char *task_name = argv[0];
-    char *task_desc = argv[1];
-    char *date_string = argv[2];
-    struct CreateNewTaskBoxParams new_task_box_params;
-    new_task_box_params.task_name = argv[0];
-    new_task_box_params.task_desc = argv[1];
+    struct LoadTasksFromDbParams *load_tasks_from_db_args = args;
+    GtkWidget *tasks_box = load_tasks_from_db_args->tasks_box;
+    int id = strtol(argv[0], NULL, 10);
+    static struct CreateNewTaskBoxParams new_task_box_params;
+    new_task_box_params.task_name = argv[1];
+    new_task_box_params.task_desc = argv[2];
     new_task_box_params.tasks_box = tasks_box;
-    new_task_box_params.date_string = argv[2];
-    create_new_task_box(&new_task_box_params);
+    new_task_box_params.date_string = argv[3];
+    new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
+    create_new_task_box(&new_task_box_params, id);
     return 0;
 };
 void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box) {
-    char *sql = "SELECT * FROM tasks";
+    char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks";
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
 
-    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, tasks_box, &db_elements->err_msg);
+    struct LoadTasksFromDbParams load_tasks_from_db_callback_args;
+    load_tasks_from_db_callback_args.tasks_box = tasks_box;
+    load_tasks_from_db_callback_args.db_elements = db_elements;
+
+    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Failed to select data\n");
         fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
@@ -409,7 +456,7 @@ int main(int argc, char **argv) {
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if( rc != SQLITE_OK ) {
         fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-         /* sqlite3_free(err_msg); */
+        sqlite3_free(err_msg);
         sqlite3_close(db);
         return 1;
     }

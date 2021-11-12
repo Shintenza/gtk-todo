@@ -42,12 +42,12 @@ entry {
     padding: 20px;
     color: white;
 }
-#single_task_box {
+.single_task_box {
     color: white;
     background-color: #282828;
     padding: 10px;
 }
-#single_task_box label:first-child {
+.single_task_box label:first-child {
     font-weight: bold;
     font-size: 20px;
 }

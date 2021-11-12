@@ -27,9 +27,11 @@ struct AddNewTaskParams {
 };
 struct CreateNewTaskBoxParams {
     GtkWidget *tasks_box;
+    struct DbElements *db_elements;
     const char *task_name;
     const char *task_desc;
     const char *date_string;
+    int *id;
 };
 struct HandleDate {
     GtkWidget *popover;
@@ -47,5 +49,13 @@ struct HandleDate {
 struct ResetWrongDateAlertBoxParams {
     GtkWidget *warning_label;
     GtkWidget *popover_box;
+};
+struct ArchiveTaskParams {
+    char *string_id;
+    struct DbElements *db_elements;
+};
+struct LoadTasksFromDbParams {
+    GtkWidget *tasks_box;
+    struct DbElements *db_elements;
 };
 #endif
