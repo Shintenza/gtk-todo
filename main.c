@@ -12,7 +12,9 @@ bool is_add_task_active = false;
 bool sent_wrong_date_alert = false; 
 
 void archive_task (GtkWidget *button, gpointer data) {
-    struct DbElements *db_elements = data; 
+    struct ArchiveTaskParams *archive_task_params = data;
+    struct DbElements *db_elements = archive_task_params->db_elements; 
+    GtkWidget *tasks_box = archive_task_params->tasks_box;
     GtkWidget *parent = gtk_widget_get_parent(button);
     const char *string_id = gtk_widget_get_name(parent);
     
@@ -20,7 +22,7 @@ void archive_task (GtkWidget *button, gpointer data) {
     char *sql = malloc(sizeof(char)*100);
     char *error;
     int id = strtol(string_id, &error, 10);
-    sprintf(sql, "DELETE FROM tasks WHERE rowid = %d", id);
+    sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %d", id);
 
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
@@ -33,6 +35,7 @@ void archive_task (GtkWidget *button, gpointer data) {
         sqlite3_free(db_elements->err_msg);
         sqlite3_close(db);
     }
+    gtk_box_remove(GTK_BOX(tasks_box), parent);
     free(sql);
 }
 
@@ -67,8 +70,9 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
 
     static struct ArchiveTaskParams archive_task_params;
     archive_task_params.db_elements = params->db_elements;
+    archive_task_params.tasks_box = params->tasks_box;
 
-    g_signal_connect(task_done_button, "clicked", G_CALLBACK(archive_task), params->db_elements);
+    g_signal_connect(task_done_button, "clicked", G_CALLBACK(archive_task), &archive_task_params);
     
     gtk_box_append(GTK_BOX(single_task_box), task_name_label);
     gtk_box_append(GTK_BOX(single_task_box), task_desc_label);
@@ -339,7 +343,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     return 0;
 };
 void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box) {
-    char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks";
+    char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0";
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
 

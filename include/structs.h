@@ -51,8 +51,8 @@ struct ResetWrongDateAlertBoxParams {
     GtkWidget *popover_box;
 };
 struct ArchiveTaskParams {
-    char *string_id;
     struct DbElements *db_elements;
+    GtkWidget *tasks_box;
 };
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
