@@ -17,16 +17,21 @@ void archive_task (GtkWidget *button, gpointer data) {
     GtkWidget *tasks_box = archive_task_params->tasks_box;
     GtkWidget *parent = gtk_widget_get_parent(button);
     const char *string_id = gtk_widget_get_name(parent);
-    
-
+    int rc = db_elements->rc;
+    sqlite3 *db = db_elements->db;
     char *sql = malloc(sizeof(char)*100);
     char *error;
     int id = strtol(string_id, &error, 10);
+    const char *button_label = gtk_button_get_label(GTK_BUTTON(button));
+
+    /* if (strcmp(button_label, "Ukończone") == 0){ */
+    /*     return; */
+    /* }; */
+    
+
     sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %d", id);
 
-    int rc = db_elements->rc;
-    sqlite3 *db = db_elements->db;
-/*  */
+
     rc = sqlite3_exec(db, sql, 0, 0, &db_elements->err_msg);
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Failed to remove data from db\n");
@@ -342,10 +347,16 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };
-void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box) {
-    char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0";
+void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished) {
+    char *sql;
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
+
+    if( strcmp(importance, "normal") == 0 && finished == 0 ) {
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE (finished = 0 AND importance = 'normal')"; 
+    } else if ( finished == 1 ) {
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1"; 
+    }
 
     struct LoadTasksFromDbParams load_tasks_from_db_callback_args;
     load_tasks_from_db_callback_args.tasks_box = tasks_box;
@@ -433,7 +444,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
     
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
-    load_tasks_from_db(db_elements, tasks_box);
+    load_tasks_from_db(db_elements, tasks_box, "normal", 0);
     
 
     gtk_window_present (GTK_WINDOW (window));
