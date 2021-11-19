@@ -147,6 +147,48 @@ void data_handler(GtkWidget *button, gpointer data) {
 
     }
 }
+int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name) {
+    struct LoadTasksFromDbParams *load_tasks_from_db_args = args;
+    GtkWidget *tasks_box = load_tasks_from_db_args->tasks_box;
+    int id = strtol(argv[0], NULL, 10);
+    static struct CreateNewTaskBoxParams new_task_box_params;
+    new_task_box_params.task_name = argv[1];
+    new_task_box_params.task_desc = argv[2];
+    new_task_box_params.tasks_box = tasks_box;
+    new_task_box_params.date_string = argv[3];
+    new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
+    create_new_task_box(&new_task_box_params, id);
+    return 0;
+};
+void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished) {
+    char *sql;
+    int rc = db_elements->rc;
+    sqlite3 *db = db_elements->db;
+
+    if( strcmp(importance, "normal") == 0 && finished == 0 ) {
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE (finished = 0 AND importance = 'normal')"; 
+    } else if ( finished == 1 ) {
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1"; 
+    }
+
+    struct LoadTasksFromDbParams load_tasks_from_db_callback_args;
+    
+    while (gtk_widget_get_last_child(tasks_box)!=NULL) {
+        GtkWidget *last_child = gtk_widget_get_last_child(tasks_box);
+        gtk_box_remove(GTK_BOX(tasks_box), last_child);
+    }
+    load_tasks_from_db_callback_args.tasks_box = tasks_box;
+    load_tasks_from_db_callback_args.db_elements = db_elements;
+
+    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Failed to select data\n");
+        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
+
+        sqlite3_free(db_elements->err_msg);
+        sqlite3_close(db);
+    }
+}
 void date_handler (GtkMenuButton *button, gpointer data) {
     struct HandleDate *params = data;
     GDateTime *date = gtk_calendar_get_date(GTK_CALENDAR(params->calendar));
@@ -242,6 +284,14 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         gtk_menu_button_set_label(GTK_MENU_BUTTON(params->add_date_button), "Zmień datę");
     } 
 }
+void load_archived_tasks(GtkWidget *button, gpointer user_data) {
+    struct LoadTasksFromDbParams *load_tasks_params = user_data;
+    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 1);
+}
+void load_active_tasks(GtkWidget *button, gpointer user_data) {
+    struct LoadTasksFromDbParams *load_tasks_params = user_data;
+    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 0);
+}
 void add_new_task(GtkWidget *button, gpointer data) {
     if(!is_add_task_active) {
         struct AddNewTaskParams *add_new_task_params = data;
@@ -288,8 +338,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
         gtk_menu_button_set_always_show_arrow(GTK_MENU_BUTTON(add_date_button), FALSE);
 
-        
-
         gtk_box_append(GTK_BOX(add_task_box), label);
         gtk_box_append(GTK_BOX(add_task_box), task_name_entry);
         gtk_box_append(GTK_BOX(add_task_box), task_desc_entry);
@@ -334,44 +382,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
     }
 
 }
-int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name) {
-    struct LoadTasksFromDbParams *load_tasks_from_db_args = args;
-    GtkWidget *tasks_box = load_tasks_from_db_args->tasks_box;
-    int id = strtol(argv[0], NULL, 10);
-    static struct CreateNewTaskBoxParams new_task_box_params;
-    new_task_box_params.task_name = argv[1];
-    new_task_box_params.task_desc = argv[2];
-    new_task_box_params.tasks_box = tasks_box;
-    new_task_box_params.date_string = argv[3];
-    new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
-    create_new_task_box(&new_task_box_params, id);
-    return 0;
-};
-void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished) {
-    char *sql;
-    int rc = db_elements->rc;
-    sqlite3 *db = db_elements->db;
-
-    if( strcmp(importance, "normal") == 0 && finished == 0 ) {
-       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE (finished = 0 AND importance = 'normal')"; 
-    } else if ( finished == 1 ) {
-       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1"; 
-    }
-
-    struct LoadTasksFromDbParams load_tasks_from_db_callback_args;
-    load_tasks_from_db_callback_args.tasks_box = tasks_box;
-    load_tasks_from_db_callback_args.db_elements = db_elements;
-
-    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
-    if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Failed to select data\n");
-        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
-
-        sqlite3_free(db_elements->err_msg);
-        sqlite3_close(db);
-    }
-}
-
 static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window = gtk_application_window_new(app);
     GtkWidget *vbox;
@@ -387,6 +397,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
     struct DbElements *db_elements = user_data;
+    static struct AddNewTaskParams params;
+    static struct LoadTasksFromDbParams load_tasks_params;
 
 
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "style.css");
@@ -410,17 +422,30 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_size_request(side_menu, 200, -1);
     gtk_widget_set_name(GTK_WIDGET(side_menu), "side_menu");
     
-    button = gtk_button_new_with_label("Dzisiaj");
-    gtk_box_append(GTK_BOX(side_menu), button);
-    gtk_widget_set_margin_bottom(button, 10);
+    tasks_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_hexpand(GTK_WIDGET(tasks_box), TRUE);
+    gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
+    gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
-    button = gtk_button_new_with_label("Nadchodzące");
+    params.window = window;
+    params.tasks_box = tasks_box;
+    params.db_elements = db_elements;
+    load_tasks_params.tasks_box = tasks_box;
+    load_tasks_params.db_elements = db_elements;
+    
+    button = gtk_button_new_with_label("Aktywne");
     gtk_box_append(GTK_BOX(side_menu), button);
     gtk_widget_set_margin_bottom(button, 10);
+    g_signal_connect(button, "clicked", G_CALLBACK(load_active_tasks), &load_tasks_params);
+    
+    /* button = gtk_button_new_with_label("Nadchodzące"); */
+    /* gtk_box_append(GTK_BOX(side_menu), button); */
+    /* gtk_widget_set_margin_bottom(button, 10); */
     
     button = gtk_button_new_with_label("Archiwum");
     gtk_box_append(GTK_BOX(side_menu), button);
     gtk_widget_set_margin_bottom(button, 10);
+    g_signal_connect(button, "clicked", G_CALLBACK(load_archived_tasks), &load_tasks_params);
 
     gtk_box_append(GTK_BOX(main_box), side_menu);
 
@@ -428,24 +453,13 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_hexpand(GTK_WIDGET(scrolled_window), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(scrolled_window), TRUE);
     
-    tasks_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_hexpand(GTK_WIDGET(tasks_box), TRUE);
-    gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
-    gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), tasks_box);
     
     gtk_box_append(GTK_BOX(main_box), scrolled_window);
-    static struct AddNewTaskParams params;
-    params.window = window;
-    params.tasks_box = tasks_box;
-    params.db_elements = db_elements;
 
-
-    
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
     load_tasks_from_db(db_elements, tasks_box, "normal", 0);
-    
 
     gtk_window_present (GTK_WINDOW (window));
 }
