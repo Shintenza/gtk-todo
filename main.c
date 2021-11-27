@@ -4,41 +4,26 @@
 
 #include "include/structs.h"
 #include "include/activate.h"
+#include "include/db_init.h"
+#include "include/cli_handling.h"
 
 int main(int argc, char **argv) {
     GtkApplication *app;
     int status;
-    
-    sqlite3 *db;
-    char *err_msg = 0;
-    int rc = sqlite3_open("todo.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot connect to the database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-    char *sql = "CREATE TABLE IF NOT EXISTS tasks (task_name TEXT, \
-                                                   task_desc TEXT, \
-                                                   date_string TEXT,\
-                                                   date INT,       \
-                                                   importance TEXT,\
-                                                   finished BOOLEAN NOT NULL CHECK (finished IN (0, 1)));";
-    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-    if( rc != SQLITE_OK ) {
-        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        return 1;
-    }
-    
+    int cli_response;
     static struct DbElements db_elements;
-    db_elements.db = db;
-    db_elements.err_msg = err_msg;
-    db_elements.rc = rc;
+    db_init(&db_elements);
 
+    if (argc >= 1) {
+        cli_response = cli_handling(argc, argv);
+    }
+    
+    if (cli_response > 0) {
+        return 0;
+    }
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_FLAGS_NONE);
     g_signal_connect (app, "activate", G_CALLBACK (activate), &db_elements);
-    status = g_application_run (G_APPLICATION (app), argc, argv);
+    status = g_application_run (G_APPLICATION (app), 0, NULL);
     g_object_unref (app);
 
 
