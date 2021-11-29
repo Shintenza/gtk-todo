@@ -10,12 +10,11 @@
 int main(int argc, char **argv) {
     GtkApplication *app;
     int status;
-    int cli_response;
+    int cli_response = 0;
     static struct DbElements db_elements;
     db_init(&db_elements);
-
-    if (argc >= 1) {
-        cli_response = cli_handling(argc, argv);
+    if (argc >= 2) {
+        cli_response = cli_handling(argc, argv, &db_elements);
     }
     
     if (cli_response > 0) {

@@ -45,6 +45,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     const char *task_desc = params->task_desc;
     const char *date_string = params->date_string;
     GtkStyleContext *context;
+    char *date_string_label = malloc(40);
 
 
     char string_id[1000];
@@ -57,7 +58,9 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
 
     GtkWidget *task_name_label = gtk_label_new(task_name);
-    GtkWidget *task_date_label = gtk_label_new(date_string);
+
+    sprintf(date_string_label, "Zaplanowano na: %s", date_string);
+    GtkWidget *task_date_label = gtk_label_new(date_string_label);
     GtkWidget *task_desc_label = gtk_label_new(task_desc);
     GtkWidget *task_done_button = gtk_button_new_with_label("Ukończone");
 
@@ -217,9 +220,8 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         }
         /* TODO free memory here as well */
 
-        char *complete_date = malloc(strlen("Zaplanowano na:  ") + strlen(date_string)+strlen(time_string)+strlen(" ")+1);
+        char *complete_date = malloc(strlen(date_string)+strlen(time_string)+strlen(" ")+1);
         complete_date[0] = '\0';
-        strcat(complete_date, "Zaplanowano na:  ");
         strcat(complete_date, date_string);
         strcat(complete_date, " ");
         strcat(complete_date, time_string);

@@ -1,4 +1,5 @@
 #ifndef CLI_HANDLING
 #define CLI_HANDLING
-int cli_handling (int argc, char **argv);
+#include "structs.h"
+int cli_handling (int argc, char **argv, struct DbElements *db_elements);
 #endif
