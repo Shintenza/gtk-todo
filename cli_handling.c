@@ -15,16 +15,24 @@ struct CliTask {
 struct CliLoadTaskParams {
     struct CliTask *tasks_arr;
     int *entries_counter;
+    int long_listing;
 };
 
 static int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_name ) {
     struct CliLoadTaskParams *params = args;
     int *entries_counter = params->entries_counter;
-    char final_message[strlen(argv[1])+strlen(argv[2])+strlen(argv[3])+30];
+    int long_listing = params->long_listing;
+    char final_message[strlen(argv[1])+strlen(argv[2])+strlen(argv[3])+100];
     char *error;
     long long time = strtoll(argv[4], &error, 10);
-
-    sprintf(final_message, "Zadanie nr: %d\nNazwa zadania: %s\nOpis zadania: %s\n%s\n", *entries_counter, argv[1], argv[2], argv[3]);
+    if(*entries_counter>MAX_ENTRIES) {
+        return 0;
+    }
+    if (long_listing == 1) {
+        sprintf(final_message, "Zadanie nr: %d\nNazwa zadania: %s\nOpis zadania: %s\nZaplanowano na: %s\nId z bazy danych: %s\nZaplanowano na (UNIX time): %lld\n\n", *entries_counter, argv[1], argv[2], argv[3], argv[0], time);
+    } else {
+        sprintf(final_message, "Zadanie nr: %d\nNazwa zadania: %s\nOpis zadania: %s\nZaplanowano na: %s\n\n", *entries_counter, argv[1], argv[2], argv[3]);
+    }
     strcpy(params->tasks_arr[*entries_counter].name, argv[1]);
     strcpy(params->tasks_arr[*entries_counter].description, argv[2]);
     strcpy(params->tasks_arr[*entries_counter].string_time, argv[3]);
@@ -36,7 +44,7 @@ static int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_
     *entries_counter = *entries_counter + 1;
     return 0;
 }
-static void cli_load_tasks(sqlite3 *db, char *err_msg, int rc, char *status, struct CliTask *tasks_arr, int *entries_counter){
+static void cli_load_tasks(sqlite3 *db, char *err_msg, int rc, char *status, struct CliTask *tasks_arr, int *entries_counter, int long_listing){
     char *sql; 
     struct CliLoadTaskParams params;
     if(strcmp(status, "active")==0) {
@@ -46,26 +54,47 @@ static void cli_load_tasks(sqlite3 *db, char *err_msg, int rc, char *status, str
     }
     params.tasks_arr = tasks_arr;
     params.entries_counter = entries_counter;
+    params.long_listing = long_listing;
     rc = sqlite3_exec(db, sql, cli_load_tasks_callback, &params, &err_msg);
     return;
 }
-
+int check_if_flag_exists(int argc, char **argv, char *flag) {
+    int i;
+    for (i=2; i<argc; i++) {
+        if(strcmp(argv[i], flag)==0) return 1;
+    }
+    return 0;
+}
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
     sqlite3 *db = db_elements->db;
     char *err_msg = db_elements->err_msg;
     int rc = db_elements->rc;
     struct CliTask tasks_arr[MAX_ENTRIES] = {{0}};
 
+    char *main_flag = argv[1];
     int entries_counter = 0;
     int i = 0;
     i = 0;
-    if (strcmp(argv[1], "--help")==0 || strcmp(argv[1], "-h")==0) {
+    if (strcmp(main_flag, "--help") ==0 || strcmp(main_flag, "-h")==0) {
         printf("%s", help_message());
-    } else if(strcmp(argv[1], "-L")==0 || strcmp(argv[1], "-l")==0) {
-        printf("[Lista aktywnych zadań:]\n\n");
-        cli_load_tasks(db, err_msg, rc, "active", tasks_arr, &entries_counter);
+    } else if(strcmp(main_flag, "-L")==0 || strcmp(main_flag, "-l")==0) {
+        if (check_if_flag_exists(argc, argv, "-o")==1) {
+            printf("[Lista archiwalnych zadań:]\n\n");
+            if (check_if_flag_exists(argc, argv, "-v")==1) {
+                cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, &entries_counter, 1);
+            } else {
+                cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, &entries_counter, 0);
+            }
+        } else {
+            printf("[Lista aktywnych zadań:]\n\n");
+            if (check_if_flag_exists(argc, argv, "-v")==1) {
+                cli_load_tasks(db, err_msg, rc, "active", tasks_arr, &entries_counter, 1);
+            } else {
+                cli_load_tasks(db, err_msg, rc, "active", tasks_arr, &entries_counter, 0);
+            }
+        }
         while (i<MAX_ENTRIES && tasks_arr[i].unix_time !=0) {
-            printf("Zadanie nr %d: %s\n", tasks_arr[i].call_id, tasks_arr[i].name);
+            printf("%s", tasks_arr[i].response_msg);
             i++;
         }
     } else {

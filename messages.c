@@ -11,5 +11,6 @@ char* help_message() {
                 c_todo -A -t \"Zaliczenie projektu z języka C\" -d \"Przykładowy opis zadania\" -tm \"28\\12\\2021\\21:37\"\n\
     -l, L wyświetlanie zadań\n\
             -a (domyślne) - wyświetla aktywne zadania\n\
-            -o - wyświetla zadania archiwalne\n";
+            -o - wyświetla zadania archiwalne\n\
+            -v - wyświetla szczegółowe informacje o zadaniu\n";
 }
