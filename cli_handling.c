@@ -2,12 +2,13 @@
 #include "include/messages.h"
 #define MAX_ENTRIES 10
 #define MAX_NAME_LENGTH 125
+#define MAX_DESC_LENGTH 2000
 
 struct CliTask {
     int call_id;
     char rowid[100];
     char name[MAX_NAME_LENGTH];
-    char description[MAX_NAME_LENGTH];
+    char description[MAX_DESC_LENGTH];
     char string_time[MAX_NAME_LENGTH];
     long long unix_time;
     char response_msg[1000];
@@ -65,6 +66,29 @@ int check_if_flag_exists(int argc, char **argv, char *flag) {
     }
     return 0;
 }
+void listing_handling (int *entries_counter, struct CliTask *tasks_arr, int argc, char **argv, sqlite3 *db, char *err_msg, int rc) {
+    int i = 0;
+    i = 0;
+    if (check_if_flag_exists(argc, argv, "-o")==1) {
+        printf("[Lista archiwalnych zadań:]\n\n");
+        if (check_if_flag_exists(argc, argv, "-v")==1) {
+            cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, entries_counter, 1);
+        } else {
+            cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, entries_counter, 0);
+        }
+    } else {
+        printf("[Lista aktywnych zadań:]\n\n");
+        if (check_if_flag_exists(argc, argv, "-v")==1) {
+            cli_load_tasks(db, err_msg, rc, "active", tasks_arr, entries_counter, 1);
+        } else {
+            cli_load_tasks(db, err_msg, rc, "active", tasks_arr, entries_counter, 0);
+        }
+    }
+    while (i<MAX_ENTRIES && tasks_arr[i].unix_time !=0) {
+        printf("%s", tasks_arr[i].response_msg);
+        i++;
+    }
+}
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
     sqlite3 *db = db_elements->db;
     char *err_msg = db_elements->err_msg;
@@ -73,30 +97,12 @@ int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
 
     char *main_flag = argv[1];
     int entries_counter = 0;
-    int i = 0;
-    i = 0;
     if (strcmp(main_flag, "--help") ==0 || strcmp(main_flag, "-h")==0) {
         printf("%s", help_message());
     } else if(strcmp(main_flag, "-L")==0 || strcmp(main_flag, "-l")==0) {
-        if (check_if_flag_exists(argc, argv, "-o")==1) {
-            printf("[Lista archiwalnych zadań:]\n\n");
-            if (check_if_flag_exists(argc, argv, "-v")==1) {
-                cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, &entries_counter, 1);
-            } else {
-                cli_load_tasks(db, err_msg, rc, "archived", tasks_arr, &entries_counter, 0);
-            }
-        } else {
-            printf("[Lista aktywnych zadań:]\n\n");
-            if (check_if_flag_exists(argc, argv, "-v")==1) {
-                cli_load_tasks(db, err_msg, rc, "active", tasks_arr, &entries_counter, 1);
-            } else {
-                cli_load_tasks(db, err_msg, rc, "active", tasks_arr, &entries_counter, 0);
-            }
-        }
-        while (i<MAX_ENTRIES && tasks_arr[i].unix_time !=0) {
-            printf("%s", tasks_arr[i].response_msg);
-            i++;
-        }
+        listing_handling(&entries_counter, tasks_arr, argc, argv, db, err_msg, rc);
+    } else if(strcmp(main_flag, "-D")==0 || strcmp(main_flag, "-d")==0) {
+        printf("czyszczenie tak o!\n");
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
     }
