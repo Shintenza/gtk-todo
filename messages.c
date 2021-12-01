@@ -12,5 +12,9 @@ char* help_message() {
     -l, L wyświetlanie zadań\n\
             -a (domyślne) - wyświetla aktywne zadania\n\
             -o - wyświetla zadania archiwalne\n\
-            -v - wyświetla szczegółowe informacje o zadaniu\n";
+            -v - wyświetla szczegółowe informacje o zadaniu\n\
+    -d, D kasowanie zadań\n\
+            -n - kasowanie po numerze zadania\n\
+            -i - kasowanie po id z bazy danych\n\
+            -Ao - kasowanie wszystkich zadań archiwalnych\n";
 }
