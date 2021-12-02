@@ -102,6 +102,18 @@ void listing_handling (int *entries_counter, struct CliTask *tasks_arr, int argc
         }
     }
 }
+void delete_handling (int argc, char **argv, int tasks_array_len, int first_finished_task, struct CliTask *tasks_arr) {
+    int user_given_id;
+    char *error;
+    if (argc < 3) printf("Musisz podać numer zadania lub jego id z bazy danych po fladze -b\n");
+    if (check_if_flag_exists(argc, argv, "-b")){
+        user_given_id = strtol(argv[3], &error, 10);
+        if (*error!='\0') {
+            printf("Podana wartość musi być liczbą!\n");
+            return;
+        }
+    }
+}
 void init_load(sqlite3 *db, char *err_msg, struct CliTask *tasks_arr, int *entries_counter) {
     char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks ORDER BY finished, date ASC;"; 
     struct CliLoadTaskParams params;
@@ -130,7 +142,7 @@ int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
     } else if(strcmp(main_flag, "-L")==0 || strcmp(main_flag, "-l")==0) {
         listing_handling(&entries_counter, tasks_arr, argc, argv, &tasks_array_len, &first_finished_task);
     } else if(strcmp(main_flag, "-D")==0 || strcmp(main_flag, "-d")==0) {
-        printf("czyszczenie tak o!\n");
+        delete_handling(argc, argv, tasks_array_len, first_finished_task, tasks_arr);
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
     }
