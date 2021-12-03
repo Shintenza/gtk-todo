@@ -6,7 +6,7 @@
 
 struct CliTask {
     int call_id;
-    char rowid[100];
+    int rowid;
     char name[MAX_NAME_LENGTH];
     char description[MAX_DESC_LENGTH];
     char string_time[MAX_NAME_LENGTH];
@@ -17,16 +17,14 @@ struct CliTask {
 struct CliLoadTaskParams {
     struct CliTask *tasks_arr;
     int *entries_counter;
-    int long_listing;
 };
 
 static int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_name ) {
     struct CliLoadTaskParams *params = args;
     int *entries_counter = params->entries_counter;
-    int long_listing = params->long_listing;
-    char *error;
-    long long time = strtoll(argv[4], &error, 10);
-    unsigned int finished = strtoll(argv[6], &error, 10);
+    long long time = strtoll(argv[4], NULL, 10);
+    unsigned int finished = strtoll(argv[6], NULL, 10);
+    int rowid = strtol(argv[0], NULL, 10);
 
     if(*entries_counter>MAX_ENTRIES) {
         return 0;
@@ -35,7 +33,7 @@ static int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_
     strcpy(params->tasks_arr[*entries_counter].name, argv[1]);
     strcpy(params->tasks_arr[*entries_counter].description, argv[2]);
     strcpy(params->tasks_arr[*entries_counter].string_time, argv[3]);
-    strcpy(params->tasks_arr[*entries_counter].rowid, argv[0]);
+    params->tasks_arr[*entries_counter].rowid = rowid;
     params->tasks_arr[*entries_counter].unix_time=time;
     params->tasks_arr[*entries_counter].call_id=*entries_counter;
     params->tasks_arr[*entries_counter].finished=finished;
@@ -66,7 +64,7 @@ void listing_handling_output (int finished, int *tasks_arr_len, int *first_finis
     int i = 0;
     while (i<*tasks_arr_len) {
         if (tasks_arr[i].finished == finished && rich_output == 1) {
-            printf("Zadanie nr: %d\nNazwa zadania: %s\nOpis zadania: %s\nZaplanowano na: %s\nId z bazy danych: %s\nZaplanowano na (UNIX time): %lld\n\n",\
+            printf("Zadanie nr: %d\nNazwa zadania: %s\nOpis zadania: %s\nZaplanowano na: %s\nId z bazy danych: %d\nZaplanowano na (UNIX time): %lld\n\n",\
                     finished == 1 ? tasks_arr[i].call_id - *first_finished_task : tasks_arr[i].call_id,\
                     tasks_arr[i].name,\
                     tasks_arr[i].description,\
@@ -103,16 +101,44 @@ void listing_handling (int *entries_counter, struct CliTask *tasks_arr, int argc
     }
 }
 void delete_handling (int argc, char **argv, int tasks_array_len, int first_finished_task, struct CliTask *tasks_arr) {
-    int user_given_id;
+    int db_user_given_id = -1;
+    int user_given_id = -1;
     char *error;
+    int i;
+    struct CliTask chosen_task;
     if (argc < 3) printf("Musisz podać numer zadania lub jego id z bazy danych po fladze -b\n");
-    if (check_if_flag_exists(argc, argv, "-b")){
-        user_given_id = strtol(argv[3], &error, 10);
+    if (check_if_flag_exists(argc, argv, "-b") || check_if_flag_exists(argc, argv, "-n")){
+
+        db_user_given_id = check_if_flag_exists(argc, argv, "-b") ? strtol(argv[3], &error, 10) : -1;
+        user_given_id = check_if_flag_exists(argc, argv, "-n") ? strtol(argv[3], &error, 10) : -1;
         if (*error!='\0') {
             printf("Podana wartość musi być liczbą!\n");
             return;
         }
+    } else if (argc == 3) {
+        user_given_id = strtol(argv[2], &error, 10);
+        if (*error!='\0') {
+            printf("Podana wartość musi być liczbą!\n");
+            return;
+        }
+    } else {
+        printf("Niepoprawna flaga! Użyj --help aby otrzymać pomoc.\n");
+        return;
     }
+    if (db_user_given_id>=0) {
+        for (i = 0; i<tasks_array_len; i++) {
+            if (db_user_given_id == tasks_arr[i].rowid) {
+                chosen_task = tasks_arr[i];
+            }
+        }
+    } else {
+        for (i = 0; i< tasks_array_len; i++) {
+            if (user_given_id == tasks_arr[i].call_id) {
+                chosen_task = tasks_arr[i];
+            }
+        }
+    }
+    printf("Działanie na tasku o nazwie: %s\n", chosen_task.name);
 }
 void init_load(sqlite3 *db, char *err_msg, struct CliTask *tasks_arr, int *entries_counter) {
     char *sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks ORDER BY finished, date ASC;"; 
@@ -122,6 +148,7 @@ void init_load(sqlite3 *db, char *err_msg, struct CliTask *tasks_arr, int *entri
     params.tasks_arr = tasks_arr;
     params.entries_counter = entries_counter;
     rc = sqlite3_exec(db, sql, cli_load_tasks_callback, &params, &err_msg);
+    /* TODO make error handling */
 }
 
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
@@ -131,7 +158,6 @@ int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
     struct CliTask tasks_arr[MAX_ENTRIES] = {{0}};
     int entries_counter = 0;
     int tasks_array_len = 0;
-    int rc = db_elements->rc;
     int first_finished_task = 0;
 
     init_load(db, err_msg, tasks_arr, &entries_counter);
