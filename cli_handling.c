@@ -220,6 +220,27 @@ void init_load(sqlite3 *db, struct CliTask *tasks_arr, int *entries_counter) {
         return;
     }
 }
+void adding_handling (int argc, char **argv, sqlite3 *db){
+    int different_flag_counter = 0; 
+    int found_flags[3] = {0};
+    int i;
+
+    for (i=2; i<argc; i++) {
+        if (strcmp(argv[i], "-t") == 0) {
+            found_flags[0] = i;
+        } else if (strcmp(argv[i], "-d") == 0) {
+            found_flags[1] = i;
+        } else if (strcmp(argv[i], "-tm") == 0) {
+            found_flags[2] = i;
+        }
+    }
+    for (i = 0; i<3; i++) {
+        if (found_flags[i]==0) {
+            printf("Nie podano wszystkich informacji wymaganych do uruchomienia tego polecenia. Sprawdź --help\n");
+            return;
+        }
+    }
+}
 
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
     sqlite3 *db = db_elements->db;
@@ -238,6 +259,8 @@ int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
         listing_handling(&entries_counter, tasks_arr, argc, argv, &tasks_array_len, &first_finished_task);
     } else if(strcmp(main_flag, "-D")==0 || strcmp(main_flag, "-d")==0) {
         delete_handling(argc, argv, tasks_array_len, first_finished_task, tasks_arr, db);
+    } else if(strcmp(main_flag, "-A")==0 || strcmp(main_flag, "-a")==0){
+        adding_handling(argc, argv, db);
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
     }
