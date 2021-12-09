@@ -221,9 +221,18 @@ void init_load(sqlite3 *db, struct CliTask *tasks_arr, int *entries_counter) {
     }
 }
 void adding_handling (int argc, char **argv, sqlite3 *db){
-    int different_flag_counter = 0; 
     int found_flags[3] = {0};
+    char task_name[MAX_NAME_LENGTH];
+    char task_desc[MAX_DESC_LENGTH];
+    char task_date[17];
+    char day_string[3], month_string[3], year_string[5], hours_string[3], minutes_string[3];
+    char *error;
+    int day, month, year, hours, minutes;
     int i;
+    if (argc != 8) {
+        printf("Sprawdź składnię komendy! Aby to zrobić sprawdź --help!\n");
+        return;
+    }
 
     for (i=2; i<argc; i++) {
         if (strcmp(argv[i], "-t") == 0) {
@@ -240,6 +249,40 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
             return;
         }
     }
+    if (strlen(argv[found_flags[0]+1])>MAX_NAME_LENGTH) {
+        printf("Podano za długą nazwę zadania, pamiętaj że limit to %d znaków!\n", MAX_NAME_LENGTH);
+        return;
+    }
+    strcpy(task_name, argv[found_flags[0]+1]);
+    if (strlen(argv[found_flags[0]+1])>MAX_DESC_LENGTH) {
+        printf("Podano za długą nazwę zadania, pamiętaj że limit to %d znaków!\n", MAX_NAME_LENGTH);
+        return;
+    }
+    strcpy(task_desc, argv[found_flags[1]+1]);
+    if (strlen(argv[found_flags[2]+1])!=16 ||\
+            argv[found_flags[2]+1][2]!='/'||\
+            argv[found_flags[2]+1][5]!='/'||\
+            argv[found_flags[2]+1][10]!='/'||\
+            argv[found_flags[2]+1][13]!=':')  {
+        printf("Podano niepoprawną datę! Sprawdź poprawny format komendą --help\n");
+        return;
+    }
+    strcpy(task_date, argv[found_flags[2]+1]);
+
+    strncpy(day_string, &task_date[0], 2);
+    day = strtol(day_string, &error, 10);
+    strncpy(month_string, &task_date[3], 2);
+    month = strtol(month_string, &error, 10);
+    strncpy(year_string, &task_date[6], 4);
+    year = strtol(year_string, &error, 10);
+    strncpy(hours_string, &task_date[11], 2);
+    hours = strtol(hours_string, &error, 10);
+    strncpy(minutes_string, &task_date[14], 2);
+    minutes = strtol(minutes_string, &error, 10);
+
+    printf("%s\n", task_name);
+    printf("%s\n", task_desc);
+    printf("Dzień %d, miesiąc %d, rok %d, godzina %d, minuta %d\n", day, month, year, hours, minutes);
 }
 
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
