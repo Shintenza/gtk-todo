@@ -1,6 +1,7 @@
 #include "include/structs.h"
 #include "include/messages.h"
 #include <stdio.h>
+#include <time.h>
 #define MAX_ENTRIES 1000
 #define MAX_NAME_LENGTH 125
 #define MAX_DESC_LENGTH 2000
@@ -222,13 +223,27 @@ void init_load(sqlite3 *db, struct CliTask *tasks_arr, int *entries_counter) {
 }
 void adding_handling (int argc, char **argv, sqlite3 *db){
     int found_flags[3] = {0};
+    int rc;
     char task_name[MAX_NAME_LENGTH];
     char task_desc[MAX_DESC_LENGTH];
     char task_date[17];
+    char user_input[4];
     char day_string[3], month_string[3], year_string[5], hours_string[3], minutes_string[3];
     char *error;
     int day, month, year, hours, minutes;
     int i;
+    struct tm {
+        int tm_sec;
+        int tm_min;
+        int tm_hour;
+        int tm_mday;
+        int tm_mon;
+        int tm_year;
+    } time;
+    time_t epoch;
+    char *sql = malloc(MAX_NAME_LENGTH+MAX_DESC_LENGTH+17+15);
+    char *db_error_msg = 0;
+
     if (argc != 8) {
         printf("Sprawdź składnię komendy! Aby to zrobić sprawdź --help!\n");
         return;
@@ -269,6 +284,7 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     }
     strcpy(task_date, argv[found_flags[2]+1]);
 
+    /*Error handling has to be done!!!*/
     strncpy(day_string, &task_date[0], 2);
     day = strtol(day_string, &error, 10);
     strncpy(month_string, &task_date[3], 2);
@@ -280,9 +296,26 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     strncpy(minutes_string, &task_date[14], 2);
     minutes = strtol(minutes_string, &error, 10);
 
-    printf("%s\n", task_name);
-    printf("%s\n", task_desc);
-    printf("Dzień %d, miesiąc %d, rok %d, godzina %d, minuta %d\n", day, month, year, hours, minutes);
+    printf("Podsumowanie dodawania nowego zadania:\n\nNazwa zadania: %s\nOpis zadania: %s\nWprowadzony czas: %s\nCzy podane informacje się zgadzają? Wpisz tak lub nie: ", task_name, task_desc, task_date);
+    fgets(user_input, 4, stdin);
+
+    if (strcmp(user_input, "tak")!=0) {
+        return;
+    } 
+    time.tm_mday = day; time.tm_mon = month; time.tm_year = year; time.tm_hour = hours; time.tm_min = minutes; time.tm_sec = 0;
+    /* ???Why??? */
+    epoch = mktime(&time);
+    sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, task_date, epoch);
+    rc = sqlite3_exec(db, sql, NULL, NULL, &db_error_msg);
+    if (rc!=SQLITE_OK) {
+        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
+        sqlite3_free(db_error_msg);
+        sqlite3_close(db);
+        free(sql);
+        return;
+    }
+    printf("Pomyślnie dodano nowe zadanie!!!\n");
+    free(sql);
 }
 
 int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
