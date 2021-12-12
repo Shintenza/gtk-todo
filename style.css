@@ -2,16 +2,16 @@
     padding-top: 10px;
     padding-left: 10px;
 }
+#right_box {
+    padding: 10px;
+    background: #595959;
+}
 #tasks_box {
     background: #595959;
-    padding: 10px;
 }
 #add_task_box {
     background-color: #282828;
-    padding-top: 10px;
-    padding-left: 10px;
-    padding-bottom: 10px;
-    padding-right: 10px;
+    padding: 10px;
     color: white;
 }
 window {

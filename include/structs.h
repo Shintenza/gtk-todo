@@ -8,6 +8,11 @@ struct DbElements {
     sqlite3 *db; 
     int rc;
 };
+struct ActivateParams {
+    struct DbElements *db_elements;
+    bool *is_add_task_active;
+    bool *sent_wrong_date_alert; 
+};
 struct TaskDataParams {
     GtkEntryBuffer *task_name_buffer;
     GtkEntryBuffer *task_desc_buffer;
@@ -23,6 +28,7 @@ struct TaskDataParams {
 struct AddNewTaskParams {
    GtkWidget *window;
    GtkWidget *tasks_box;
+   GtkWidget *right_box;
    struct DbElements *db_elements;
 };
 struct CreateNewTaskBoxParams {

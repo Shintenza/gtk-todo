@@ -235,6 +235,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     if(!is_add_task_active) {
         struct AddNewTaskParams *add_new_task_params = data;
         GtkWidget *tasks_box = add_new_task_params->tasks_box;
+        GtkWidget *right_box = add_new_task_params->right_box;
         GtkWidget *parent_window = add_new_task_params->window;
         GtkWidget *add_date_button = gtk_menu_button_new();
         GtkWidget *popover = gtk_popover_new();
@@ -283,10 +284,12 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_box_append(GTK_BOX(add_task_box), add_date_button);
 
         gtk_box_append(GTK_BOX(add_task_box), add_button);
+        /* make tasks box inactive*/
+        gtk_widget_set_sensitive(tasks_box, false);
 
-        gtk_box_prepend(GTK_BOX(tasks_box), add_task_box);
+        gtk_box_prepend(GTK_BOX(right_box), add_task_box);
         is_add_task_active= !is_add_task_active;
-        
+
         gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
         popover_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
         gtk_popover_set_child(GTK_POPOVER(popover), GTK_WIDGET(popover_box));
@@ -315,6 +318,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         date_params.params = &params;
         date_params.desc_entry = task_desc_entry;
         date_params.add_date_button = add_date_button;
+
 
         g_signal_connect(button, "clicked", G_CALLBACK(date_handler), &date_params);
         g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &params);

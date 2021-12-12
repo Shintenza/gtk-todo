@@ -85,7 +85,6 @@ void listing_handling_output (int finished, int *tasks_arr_len, int *first_finis
     }
 }
 void listing_handling (int *entries_counter, struct CliTask *tasks_arr, int argc, char **argv, int *tasks_arr_len, int *first_finished_task) {
-
     if (check_if_flag_exists(argc, argv, "-o")==1) {
         printf("[Lista archiwalnych zadań:]\n\n");
         if (check_if_flag_exists(argc, argv, "-v")==1) {
@@ -303,6 +302,7 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
         return;
     } 
     time.tm_mday = day; time.tm_mon = month; time.tm_year = year; time.tm_hour = hours; time.tm_min = minutes; time.tm_sec = 0;
+
     /* ???Why??? */
     epoch = mktime(&time);
     sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, task_date, epoch);
