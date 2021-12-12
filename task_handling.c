@@ -122,7 +122,8 @@ void data_handler(GtkWidget *button, gpointer data) {
 
         create_new_task_box(&fn_params, element_id);
         is_add_task_active = false;
-        gtk_box_remove(GTK_BOX(tasks_box), add_task_box);
+        gtk_box_remove(GTK_BOX(params->right_box), add_task_box);
+        gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
         char *sql = malloc(sizeof(char)*1000);
         sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, params->string_date, params->unix_datetime);
@@ -273,6 +274,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         params.tasks_box = tasks_box;
         params.add_task_box = add_task_box;
         params.db_elements = db_elements;
+        params.right_box = right_box;
 
         gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
         gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
