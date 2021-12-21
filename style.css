@@ -72,3 +72,23 @@ spinbutton button {
 popover contents {
     background: #282828;
 }
+#f_add_button{
+    background: #2a7ef5; 
+    font-weight: bold;
+    font-size: 2rem;
+    border-radius: 50%;
+    border: none;
+}
+#f_add_button:hover{
+    background: #174d99;
+}
+#f_add_button_red{
+    background: red; 
+    font-weight: bold;
+    font-size: 2rem;
+    border-radius: 50%;
+    border: none;
+}
+#f_add_button_red:hover{
+    background: #750101;
+}

@@ -232,6 +232,19 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         gtk_menu_button_set_label(GTK_MENU_BUTTON(params->add_date_button), "Zmień datę");
     } 
 }
+void cancel_adding_new_task(GtkWidget *button, gpointer data){
+    struct CancelAddingNewTaskParams *cancel_params = data; 
+    GtkWidget *floating_add_button = cancel_params->floating_add_button;
+    GtkWidget *add_task_box = cancel_params->add_task_box;
+    GtkWidget *add_task_box_parent = gtk_widget_get_parent(add_task_box);
+
+    gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
+    gtk_widget_set_name(floating_add_button, "f_add_button");
+    gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
+    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), cancel_params->add_task_params);
+    is_add_task_active = !is_add_task_active;
+    gtk_widget_set_sensitive(cancel_params->tasks_box, TRUE);
+}
 void add_new_task(GtkWidget *button, gpointer data) {
     if(!is_add_task_active) {
         struct AddNewTaskParams *add_new_task_params = data;
@@ -239,6 +252,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *right_box = add_new_task_params->right_box;
         GtkWidget *parent_window = add_new_task_params->window;
         GtkWidget *add_date_button = gtk_menu_button_new();
+        GtkWidget *floating_add_button = add_new_task_params->floating_add_button;
         GtkWidget *popover = gtk_popover_new();
         GtkWidget *popover_box;
         GtkWidget *popover_sub_box;
@@ -249,6 +263,8 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *add_task_box, *task_name_entry, *task_desc_entry, *add_button, *label;
         GtkEntryBuffer *task_name_buffer, *task_desc_buffer;
         struct DbElements *db_elements = add_new_task_params->db_elements;
+        gtk_button_set_label(GTK_BUTTON(floating_add_button), "X");
+        gtk_widget_set_name(floating_add_button, "f_add_button_red");
         
 
         add_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -320,10 +336,15 @@ void add_new_task(GtkWidget *button, gpointer data) {
         date_params.params = &params;
         date_params.desc_entry = task_desc_entry;
         date_params.add_date_button = add_date_button;
-
+        static struct CancelAddingNewTaskParams cancel_params;
+        cancel_params.add_task_box = add_task_box;
+        cancel_params.floating_add_button = floating_add_button;
+        cancel_params.add_task_params = add_new_task_params;
+        cancel_params.tasks_box = tasks_box;
 
         g_signal_connect(button, "clicked", G_CALLBACK(date_handler), &date_params);
         g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &params);
+        g_signal_connect(floating_add_button, "clicked", G_CALLBACK(cancel_adding_new_task), &cancel_params);
     }
 
 }

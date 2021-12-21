@@ -7,6 +7,8 @@ void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window = gtk_application_window_new(app);
     GtkWidget *vbox, *main_box, *side_menu, *tasks_box, *button, *scrolled_window, *add_task_button, *right_box;
     GtkWidget *header_bar = gtk_header_bar_new();
+    GtkWidget *overlay = gtk_overlay_new();
+    GtkWidget *floating_add_button = gtk_button_new_with_label("+");
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
     struct ActivateParams *activate_params = user_data;
@@ -14,7 +16,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     static struct AddNewTaskParams params;
     static struct LoadTasksFromDbParams load_tasks_params;
 
-
+    gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "style.css");
     gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
     
@@ -48,6 +50,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     params.window = window;
     params.tasks_box = tasks_box;
     params.db_elements = db_elements;
+    params.floating_add_button = floating_add_button;
     load_tasks_params.tasks_box = tasks_box;
     load_tasks_params.db_elements = db_elements;
     
@@ -71,14 +74,19 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_hexpand(GTK_WIDGET(scrolled_window), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(scrolled_window), TRUE);
     
-    
+    gtk_box_append(GTK_BOX(main_box), overlay);
+    gtk_overlay_set_child(GTK_OVERLAY(overlay), scrolled_window);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), right_box);
-    
-    gtk_box_append(GTK_BOX(main_box), scrolled_window);
     gtk_box_append(GTK_BOX(right_box), tasks_box);
     params.right_box = right_box;
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), floating_add_button);
+    gtk_widget_set_halign(floating_add_button, GTK_ALIGN_END);
+    gtk_widget_set_valign(floating_add_button, GTK_ALIGN_END);
+    gtk_widget_set_margin_bottom(floating_add_button, 20);
+    gtk_widget_set_margin_end(floating_add_button, 20);
 
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
+    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &params);
     load_tasks_from_db(db_elements, tasks_box, "normal", 0);
 
     gtk_window_present (GTK_WINDOW (window));
