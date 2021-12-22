@@ -9,7 +9,7 @@ void archive_task (GtkWidget *button, gpointer data) {
     struct ArchiveTaskParams *archive_task_params = data;
     struct DbElements *db_elements = archive_task_params->db_elements; 
     GtkWidget *tasks_box = archive_task_params->tasks_box;
-    GtkWidget *parent = gtk_widget_get_parent(button);
+    GtkWidget *parent = gtk_widget_get_parent(gtk_widget_get_parent(button));
     const char *string_id = gtk_widget_get_name(parent);
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
@@ -31,7 +31,28 @@ void archive_task (GtkWidget *button, gpointer data) {
     gtk_box_remove(GTK_BOX(tasks_box), parent);
     free(sql);
 }
+void remove_task (GtkWidget *button, gpointer data) {
+    struct DbElements *db_elements = data;
+    GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
+    int rc;
+    sqlite3 *db = db_elements->db;
+    char *err_msg = 0;
+    char *sql = malloc(100);
+    const char *element_id = gtk_widget_get_name(task_box);
+    printf("%s", element_id);
+    sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
+    rc = sqlite3_exec(db, sql, 0, 0, &db_elements->err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Failed to remove data from db\n");
+        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
 
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+    }
+    gtk_box_remove(GTK_BOX(tasks_box), task_box);
+    free(sql);
+}
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     struct ResetWrongDateAlertBoxParams *params = data;
     if(sent_wrong_date_alert) {
@@ -40,41 +61,55 @@ void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     }
 }
 void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
-    GtkWidget *tasks_box = params->tasks_box;
     const char *task_name = params->task_name;
     const char *task_desc = params->task_desc;
     const char *date_string = params->date_string;
-    GtkStyleContext *context;
     char *date_string_label = malloc(40);
-
-
     char string_id[1000];
+    GtkWidget *tasks_box = params->tasks_box;
+    GtkWidget *task_name_label = gtk_label_new(task_name);
+    GtkWidget *task_desc_label = gtk_label_new(task_desc);
+    GtkWidget *task_date_label;
+    GtkWidget *task_done_button = gtk_button_new_with_label("Ukończone");
+    GtkWidget *task_remove_button = gtk_button_new_with_label("Usuń");
+    GtkWidget *button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    GtkStyleContext *context;
+    static struct ArchiveTaskParams archive_task_params;
+
     sprintf(string_id, "%d", id);
 
-    GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     context = gtk_widget_get_style_context(single_task_box);
     gtk_style_context_add_class(context, "single_task_box");
 
-    gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
-
-    GtkWidget *task_name_label = gtk_label_new(task_name);
-
     sprintf(date_string_label, "Zaplanowano na: %s", date_string);
-    GtkWidget *task_date_label = gtk_label_new(date_string_label);
-    GtkWidget *task_desc_label = gtk_label_new(task_desc);
-    GtkWidget *task_done_button = gtk_button_new_with_label("Ukończone");
-
-    static struct ArchiveTaskParams archive_task_params;
+    task_date_label=gtk_label_new(date_string_label);
+    
     archive_task_params.db_elements = params->db_elements;
     archive_task_params.tasks_box = params->tasks_box;
+    
+    gtk_widget_set_name(task_remove_button, "task_remove_button");
+    gtk_widget_set_name(task_done_button, "task_add_button");
+    gtk_widget_set_name(task_name_label, "task_name_label");
+    gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
+
+    gtk_widget_set_halign(button_box, GTK_ALIGN_END);
+    gtk_widget_set_valign(button_box, GTK_ALIGN_END);
+    gtk_widget_set_halign(task_name_label, GTK_ALIGN_START);
+    gtk_widget_set_halign(task_date_label, GTK_ALIGN_START);
+    gtk_widget_set_halign(task_desc_label, GTK_ALIGN_START);
+    gtk_widget_set_hexpand(task_name_label, TRUE);
+
+    gtk_box_append(GTK_BOX(single_task_box), task_name_label);
+    gtk_box_append(GTK_BOX(single_task_box), task_date_label);
+    gtk_box_append(GTK_BOX(single_task_box), task_desc_label);
+    gtk_box_append(GTK_BOX(single_task_box), button_box);
+    gtk_box_append(GTK_BOX(button_box), task_remove_button);
+    gtk_box_append(GTK_BOX(button_box), task_done_button);
+    gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
 
     g_signal_connect(task_done_button, "clicked", G_CALLBACK(archive_task), &archive_task_params);
-    
-    gtk_box_append(GTK_BOX(single_task_box), task_name_label);
-    gtk_box_append(GTK_BOX(single_task_box), task_desc_label);
-    gtk_box_append(GTK_BOX(single_task_box), task_date_label);
-    gtk_box_append(GTK_BOX(single_task_box), task_done_button);
-    gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
+    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(remove_task), params->db_elements);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *dialog; 

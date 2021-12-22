@@ -47,9 +47,9 @@ entry {
     background-color: #282828;
     padding: 10px;
 }
-.single_task_box label:first-child {
+#task_name_label{
     font-weight: bold;
-    font-size: 20px;
+    font-size: 25px;
 }
 scrollbar slider {
     background: white;
@@ -91,4 +91,15 @@ popover contents {
 }
 #f_add_button_red:hover{
     background: #750101;
+}
+#task_remove_button {
+    background: #fc3426;
+    border: none;
+    font-size: 1.3rem;
+}
+#task_add_button {
+    font-size: 1.3rem;
+}
+#task_remove_button:hover {
+    background: #e30f00;
 }

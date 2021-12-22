@@ -68,6 +68,10 @@ struct ArchiveTaskParams {
     struct DbElements *db_elements;
     GtkWidget *tasks_box;
 };
+struct RemoveTaskParams {
+    struct DbElements *db_elements;
+    GtkWidget *tasks_box;
+};
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
     struct DbElements *db_elements;
