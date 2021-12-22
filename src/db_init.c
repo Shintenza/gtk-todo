@@ -5,7 +5,7 @@
 int db_init(struct DbElements *db_elements) {
     sqlite3 *db;
     char *err_msg = 0;
-    int rc = sqlite3_open("todo.db", &db);
+    int rc = sqlite3_open("./todo.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot connect to the database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);

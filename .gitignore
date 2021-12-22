@@ -1,7 +1,8 @@
 *.o
 todo.db
 test
-c_todo
 .cache
 *.out
 test.c
+bin/
+obj/

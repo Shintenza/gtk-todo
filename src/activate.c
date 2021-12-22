@@ -17,7 +17,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     static struct LoadTasksFromDbParams load_tasks_params;
 
     gtk_widget_set_name(floating_add_button, "f_add_button");
-    gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "style.css");
+    gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "./style.css");
     gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
     
     gtk_window_set_title(GTK_WINDOW(window), "TODO APP");
