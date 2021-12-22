@@ -13,6 +13,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.tasks_box = tasks_box;
     new_task_box_params.date_string = argv[3];
     new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
+    new_task_box_params.finished = load_tasks_from_db_args->finished;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };
@@ -35,6 +36,7 @@ void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, c
     }
     load_tasks_from_db_callback_args.tasks_box = tasks_box;
     load_tasks_from_db_callback_args.db_elements = db_elements;
+    load_tasks_from_db_callback_args.finished = finished;
 
     rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
     if (rc != SQLITE_OK ) {

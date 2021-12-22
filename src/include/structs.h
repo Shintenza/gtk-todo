@@ -46,6 +46,7 @@ struct CreateNewTaskBoxParams {
     const char *task_desc;
     const char *date_string;
     int *id;
+    int finished;
 };
 struct HandleDate {
     GtkWidget *popover;
@@ -68,12 +69,14 @@ struct ArchiveTaskParams {
     struct DbElements *db_elements;
     GtkWidget *tasks_box;
 };
-struct RemoveTaskParams {
+struct MoveTaskParams {
     struct DbElements *db_elements;
     GtkWidget *tasks_box;
+    int operation;
 };
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
     struct DbElements *db_elements;
+    int finished;
 };
 #endif

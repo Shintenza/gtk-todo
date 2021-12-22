@@ -5,52 +5,58 @@
 bool is_add_task_active = false;
 bool sent_wrong_date_alert = false; 
 
-void archive_task (GtkWidget *button, gpointer data) {
-    struct ArchiveTaskParams *archive_task_params = data;
-    struct DbElements *db_elements = archive_task_params->db_elements; 
-    GtkWidget *tasks_box = archive_task_params->tasks_box;
-    GtkWidget *parent = gtk_widget_get_parent(gtk_widget_get_parent(button));
-    const char *string_id = gtk_widget_get_name(parent);
-    int rc = db_elements->rc;
-    sqlite3 *db = db_elements->db;
-    char *sql = malloc(sizeof(char)*100);
-    char *error;
-    int id = strtol(string_id, &error, 10);
-
-    sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %d", id);
-
-
-    rc = sqlite3_exec(db, sql, 0, 0, &db_elements->err_msg);
-    if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Failed to remove data from db\n");
-        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
-
-        sqlite3_free(db_elements->err_msg);
-        sqlite3_close(db);
-    }
-    gtk_box_remove(GTK_BOX(tasks_box), parent);
-    free(sql);
-}
-void remove_task (GtkWidget *button, gpointer data) {
-    struct DbElements *db_elements = data;
+void task_move(GtkWidget *button, gpointer data) {
+    struct MoveTaskParams *move_task_params = data;
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
     int rc;
-    sqlite3 *db = db_elements->db;
+    int operation = move_task_params->operation;
+    sqlite3 *db = move_task_params->db_elements->db;
     char *err_msg = 0;
     char *sql = malloc(100);
     const char *element_id = gtk_widget_get_name(task_box);
-    printf("%s", element_id);
-    sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
-    rc = sqlite3_exec(db, sql, 0, 0, &db_elements->err_msg);
+    switch (operation) {
+        case 1:
+            sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %s", element_id);
+            break;
+        case 2:
+            sprintf(sql, "UPDATE tasks SET finished = 0 WHERE rowid = %s", element_id);
+            break;
+        default:
+            sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
+    }
+    gtk_box_remove(GTK_BOX(tasks_box), task_box);
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Failed to remove data from db\n");
-        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
+        fprintf(stderr, "Operation failed\n");
+        fprintf(stderr, "SQL error: %s\n", err_msg);
 
         sqlite3_free(err_msg);
         sqlite3_close(db);
+        return;
     }
+    free(sql);
+}
+void task_remove(GtkWidget *button, gpointer data) {
+    struct DbElements *db_elements= data;
+    GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
+    int rc;
+    sqlite3 *db =db_elements->db;
+    char *err_msg = 0;
+    char *sql = malloc(100);
+    const char *element_id = gtk_widget_get_name(task_box);
+    sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Operation failed\n");
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+        return;
+    }
     free(sql);
 }
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
@@ -64,18 +70,19 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     const char *task_name = params->task_name;
     const char *task_desc = params->task_desc;
     const char *date_string = params->date_string;
+    int finished = params->finished;
     char *date_string_label = malloc(40);
     char string_id[1000];
     GtkWidget *tasks_box = params->tasks_box;
     GtkWidget *task_name_label = gtk_label_new(task_name);
     GtkWidget *task_desc_label = gtk_label_new(task_desc);
     GtkWidget *task_date_label;
-    GtkWidget *task_done_button = gtk_button_new_with_label("Ukończone");
+    GtkWidget *task_done_button;
     GtkWidget *task_remove_button = gtk_button_new_with_label("Usuń");
     GtkWidget *button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     GtkStyleContext *context;
-    static struct ArchiveTaskParams archive_task_params;
+    static struct MoveTaskParams move_task_params;
 
     sprintf(string_id, "%d", id);
 
@@ -85,8 +92,18 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     sprintf(date_string_label, "Zaplanowano na: %s", date_string);
     task_date_label=gtk_label_new(date_string_label);
     
-    archive_task_params.db_elements = params->db_elements;
-    archive_task_params.tasks_box = params->tasks_box;
+    move_task_params.db_elements = params->db_elements;
+    move_task_params.tasks_box = params->tasks_box;
+
+    if (finished == 0) {
+        move_task_params.operation = 1;
+        task_done_button = gtk_button_new_with_label("Ukończone");
+        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_params);
+    } else {
+        move_task_params.operation = 2;
+        task_done_button = gtk_button_new_with_label("Przywróć");
+        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_params);
+    } 
     
     gtk_widget_set_name(task_remove_button, "task_remove_button");
     gtk_widget_set_name(task_done_button, "task_add_button");
@@ -107,9 +124,8 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(button_box), task_remove_button);
     gtk_box_append(GTK_BOX(button_box), task_done_button);
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
-
-    g_signal_connect(task_done_button, "clicked", G_CALLBACK(archive_task), &archive_task_params);
-    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(remove_task), params->db_elements);
+    
+    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db_elements);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *dialog; 
@@ -152,6 +168,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.tasks_box = tasks_box;
         fn_params.task_name = task_name;
         fn_params.task_desc = task_desc;
+        fn_params.finished = 0;
         fn_params.date_string = params->string_date;
         fn_params.db_elements = db_elements;
 
