@@ -135,6 +135,7 @@ void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *window = params->window;
     GtkWidget *tasks_box = params->tasks_box;
     GtkWidget *add_task_box = params->add_task_box;
+    GtkWidget *floating_add_button = params->floating_add_button;
     const gchar *task_name = gtk_entry_buffer_get_text(task_name_buffer);
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
     struct DbElements *db_elements = params->db_elements;
@@ -181,7 +182,8 @@ void data_handler(GtkWidget *button, gpointer data) {
         sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, params->string_date, params->unix_datetime);
     
         db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
-
+        gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
+        gtk_widget_set_name(floating_add_button, "f_add_button");
         free(sql);
         if( db_elements->rc != SQLITE_OK ) {
             fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db_elements->db));
@@ -343,6 +345,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         params.add_task_box = add_task_box;
         params.db_elements = db_elements;
         params.right_box = right_box;
+        params.floating_add_button = floating_add_button;
 
         gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
         gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");

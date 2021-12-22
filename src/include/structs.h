@@ -22,6 +22,7 @@ struct TaskDataParams {
     GtkWidget *date_label;
     GtkWidget *time_label;
     GtkWidget *right_box;
+    GtkWidget *floating_add_button;
     struct DbElements *db_elements;
     char * string_date;
     gint64 unix_datetime;
