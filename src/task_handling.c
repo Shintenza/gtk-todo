@@ -240,11 +240,11 @@ void data_handler(GtkWidget *button, gpointer data) {
             fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db_elements->db));
             sqlite3_close(db_elements->db);
         }
-
     }
 }
 void date_handler (GtkMenuButton *button, gpointer data) {
     struct HandleDate *params = data;
+    static struct ResetWrongDateAlertBoxParams callback_params;
     GDateTime *date = gtk_calendar_get_date(GTK_CALENDAR(params->calendar));
     int day = g_date_time_get_day_of_month(date);
     int month = g_date_time_get_month(date);
@@ -252,16 +252,30 @@ void date_handler (GtkMenuButton *button, gpointer data) {
     int hour = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(params->hour_input));
     int min = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(params->min_input));
     GTimeZone *time_zone = g_time_zone_new_local();
-    GtkWidget *popover_box = params->popover_box;
+
+    char str_day[3];
+    char str_month[3];
+    char str_year[5];
+    char str_hour[3];
+    char str_minutes[3];
+    
+    char date_string[12];
+    char time_string[6];
+    static char complete_date[20];
     
     GDateTime *selected_date = g_date_time_new(time_zone, year, month, day, hour, min, 0);
     GDateTime *date_now = g_date_time_new_now(time_zone);
+    GtkWidget *warning_label = gtk_label_new("Ustaw poprawną datę!");
+    GtkWidget *date_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
+    GtkWidget *inform_label = gtk_label_new("Ustawiono datę: ");
+    GtkWidget *date_label = gtk_label_new(date_string);
+    GtkWidget *time_label = gtk_label_new(time_string);
+    GtkWidget *popover_box = params->popover_box;
+
 
     if(g_date_time_compare(selected_date, date_now) == -1) {
-        GtkWidget *warning_label = gtk_label_new("Ustaw poprawną datę!");
         if (!sent_wrong_date_alert) {
             gtk_box_insert_child_after(GTK_BOX(popover_box), warning_label, params->popover_sub_box);
-            static struct ResetWrongDateAlertBoxParams callback_params;
             callback_params.popover_box = popover_box;
             callback_params.warning_label = warning_label;
             g_signal_connect(params->popover, "closed", G_CALLBACK(rest_wrong_date_alert), &callback_params);
@@ -269,49 +283,27 @@ void date_handler (GtkMenuButton *button, gpointer data) {
             sent_wrong_date_alert = true;
         }
     } else {
-        char str_day[10];
-        char str_month[10];
-        char str_year[10];
-        char str_hour[5];
-        char str_minutes[5];
 
-        sprintf(str_day,"%d/",day);
-        sprintf(str_month,"%d/",month);
         sprintf(str_year,"%d",year);
-        if(hour<10) {
-            sprintf(str_hour, " 0%d:", hour);
-        } else {
-            sprintf(str_hour, "%d:", hour);
-        }
-        if (min<10) {
-            sprintf(str_minutes, "0%d", min);
-        } else {
-            sprintf(str_minutes, "%d", min);
-        }
-        /* TODO free memory */
-        int date_size = strlen(str_day) + strlen(str_month) + strlen(str_year) + 1;
-        char *date_string = malloc(date_size);
+        if (month<10) sprintf(str_month, "0%d", month);
+        else sprintf(str_month, "%d", month);
+        if (day < 10) sprintf(str_day, "0%d", day);
+        else sprintf(str_day, "%d", day);
+        if(hour<10) sprintf(str_hour, "0%d", hour);
+        else sprintf(str_hour, "%d", hour); 
+        if (min<10) sprintf(str_minutes, "0%d", min);
+        else sprintf(str_minutes, "%d", min);
 
-        int time_size = strlen(str_hour) + strlen(str_minutes) + 1;
-        char *time_string = malloc(time_size);
+        sprintf(date_string, "%s/%s/%s", str_day, str_month, str_year);
 
-        date_string[0] = '\0';
-        strcat(date_string, str_day);
-        strcat(date_string, str_month);
-        strcat(date_string, str_year);
-        
-        time_string[0] = '\0';
-        strcat(time_string, str_hour);
-        strcat(time_string, str_minutes);
+        sprintf(time_string, "%s:%s", str_hour, str_minutes);
 
-        GtkWidget *date_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
-        GtkWidget *inform_label = gtk_label_new("Ustawiono datę: ");
-        GtkWidget *date_label = gtk_label_new(date_string);
+        date_label = gtk_label_new(date_string);
         
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(inform_label));
         
         inform_label = gtk_label_new("Ustawiono godzinę: ");
-        GtkWidget *time_label = gtk_label_new(time_string);
+        time_label = gtk_label_new(time_string);
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(date_label));
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(inform_label));
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(time_label));
@@ -325,13 +317,8 @@ void date_handler (GtkMenuButton *button, gpointer data) {
             gtk_label_set_label(GTK_LABEL(params->params->date_label), date_string);
             gtk_label_set_label(GTK_LABEL(params->params->time_label), time_string);
         }
-        /* TODO free memory here as well */
 
-        char *complete_date = malloc(strlen(date_string)+strlen(time_string)+strlen(" ")+1);
-        complete_date[0] = '\0';
-        strcat(complete_date, date_string);
-        strcat(complete_date, " ");
-        strcat(complete_date, time_string);
+        sprintf(complete_date, "%s %s", date_string, time_string);
         params->params->string_date =  complete_date;
         params->params->unix_datetime = g_date_time_to_unix(selected_date);
         gtk_popover_popdown(GTK_POPOVER(params->popover));
