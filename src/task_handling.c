@@ -4,6 +4,7 @@
 
 bool is_add_task_active = false;
 bool sent_wrong_date_alert = false; 
+bool appended_inform_label = false;
 
 void task_move(GtkWidget *button, gpointer data) {
     struct MoveTaskParams *move_task_params = data;
@@ -164,32 +165,35 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(button_box), task_done_button);
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
     
+    params->date_string = 0;
+    appended_inform_label = false;
     g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db_elements);
     g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db_elements->db);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *dialog; 
-    struct TaskDataParams *params = data; 
-    GtkEntryBuffer *task_name_buffer = params->task_name_buffer;
-    GtkEntryBuffer *task_desc_buffer = params->task_desc_buffer;
-    GtkWidget *window = params->window;
-    GtkWidget *tasks_box = params->tasks_box;
-    GtkWidget *add_task_box = params->add_task_box;
-    GtkWidget *floating_add_button = params->floating_add_button;
+    struct TaskDataParams *add_task_params = data; 
+    GtkEntryBuffer *task_name_buffer = add_task_params->task_name_buffer;
+    GtkEntryBuffer *task_desc_buffer = add_task_params->task_desc_buffer;
+    GtkWidget *window = add_task_params->window;
+    GtkWidget *tasks_box = add_task_params->tasks_box;
+    GtkWidget *add_task_box = add_task_params->add_task_box;
+    GtkWidget *floating_add_button = add_task_params->floating_add_button;
     const gchar *task_name = gtk_entry_buffer_get_text(task_name_buffer);
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
-    struct DbElements *db_elements = params->db_elements;
+    struct DbElements *db_elements = add_task_params->db_elements;
     static struct AddNewTaskParams add_new_task_params;
 
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
-
-    if(task_name_len < 1 || task_desc_len < 1) {
+    if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0) {
         char *err_msg;
         if(task_name_len < 1 && task_desc_len < 1) {
             err_msg = "Nie wprowadzono żadnych danych";
         } else if (task_name_len < 1 ) {
             err_msg = "Nie podano nazy zadania";
+        } else if (add_task_params->string_date == 0) {
+            err_msg = "Nie podano żadnej daty!";
         } else {
             err_msg = "Nie podano opisu zadania";
         }
@@ -211,16 +215,16 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.task_name = task_name;
         fn_params.task_desc = task_desc;
         fn_params.finished = 0;
-        fn_params.date_string = params->string_date;
+        fn_params.date_string = add_task_params->string_date;
         fn_params.db_elements = db_elements;
 
         create_new_task_box(&fn_params, element_id);
         is_add_task_active = false;
-        gtk_box_remove(GTK_BOX(params->right_box), add_task_box);
+        gtk_box_remove(GTK_BOX(add_task_params->right_box), add_task_box);
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
         char *sql = malloc(sizeof(char)*1000);
-        sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, params->string_date, params->unix_datetime);
+        sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime);
     
         db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
         gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
@@ -228,7 +232,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         add_new_task_params.window = window;
         add_new_task_params.floating_add_button = floating_add_button;
         add_new_task_params.tasks_box = tasks_box;
-        add_new_task_params.right_box = params->right_box;
+        add_new_task_params.right_box = add_task_params->right_box;
         add_new_task_params.db_elements  = db_elements;
         g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_params);
         free(sql);
@@ -312,10 +316,11 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(inform_label));
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(time_label));
         
-        if (!gtk_widget_get_parent(params->params->date_label)) {
+        if (!appended_inform_label) {
             gtk_box_insert_child_after(GTK_BOX(params->add_task_box), date_box, params->desc_entry);
             params->params->date_label = date_label;
             params->params->time_label = time_label;
+            appended_inform_label = true;
         } else {
             gtk_label_set_label(GTK_LABEL(params->params->date_label), date_string);
             gtk_label_set_label(GTK_LABEL(params->params->time_label), time_string);
@@ -393,6 +398,8 @@ void add_new_task(GtkWidget *button, gpointer data) {
         params.db_elements = db_elements;
         params.right_box = right_box;
         params.floating_add_button = floating_add_button;
+        params.string_date = 0;
+        params.unix_datetime = 0;
 
         gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
         gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
