@@ -7,6 +7,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     struct LoadTasksFromDbParams *load_tasks_from_db_args = args;
     GtkWidget *tasks_box = load_tasks_from_db_args->tasks_box;
     int id = strtol(argv[0], NULL, 10);
+    int importance = strtol(argv[5], NULL, 10);
     static struct CreateNewTaskBoxParams new_task_box_params;
     new_task_box_params.task_name = argv[1];
     new_task_box_params.task_desc = argv[2];
@@ -14,6 +15,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.date_string = argv[3];
     new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
     new_task_box_params.finished = load_tasks_from_db_args->finished;
+    new_task_box_params.importance = importance;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };

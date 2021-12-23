@@ -67,11 +67,29 @@ void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     }
 }
 void toggle_task_importance (GtkWidget *button, gpointer data) {
+    GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     const char *button_name = gtk_widget_get_name(button);
+    const char *element_id = gtk_widget_get_name(task_box);
+    sqlite3 *db = data;
+    char *sql = malloc(100);
+    int rc;
+    char *err_msg =0;
     if (strcmp(button_name, "important_button") == 0) {
+        sprintf(sql, "UPDATE tasks SET importance = 1 WHERE rowid = %s", element_id);
         gtk_widget_set_name(button, "important_button_toggled");
     } else {
+        sprintf(sql, "UPDATE tasks SET importance = 0 WHERE rowid = %s", element_id);
         gtk_widget_set_name(button, "important_button");
+    }
+
+    rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
+    if (rc != SQLITE_OK ) {
+        fprintf(stderr, "Operation failed\n");
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+
+        sqlite3_free(err_msg);
+        sqlite3_close(db);
+        return;
     }
     return; 
 }
@@ -120,7 +138,11 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_name(task_done_button, "task_add_button");
     gtk_widget_set_name(task_name_label, "task_name_label");
     gtk_widget_set_name(name_and_important_box, "ni_box");
-    gtk_widget_set_name(importatnt_button, "important_button");
+    if (params->importance == 0) {
+        gtk_widget_set_name(importatnt_button, "important_button");
+    } else {
+        gtk_widget_set_name(importatnt_button, "important_button_toggled");
+    }
     gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
 
     gtk_widget_set_halign(button_box, GTK_ALIGN_END);
@@ -143,7 +165,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
     
     g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db_elements);
-    g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), NULL);
+    g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db_elements->db);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *dialog; 

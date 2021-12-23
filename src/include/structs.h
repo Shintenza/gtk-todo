@@ -46,7 +46,7 @@ struct CreateNewTaskBoxParams {
     const char *task_name;
     const char *task_desc;
     const char *date_string;
-    const int importance;
+    int importance;
     int *id;
     int finished;
 };
