@@ -81,4 +81,8 @@ struct LoadTasksFromDbParams {
     struct DbElements *db_elements;
     int finished;
 };
+struct ToggleTaskImportance {
+    sqlite3 *db;
+    const char *widget_name;
+};
 #endif

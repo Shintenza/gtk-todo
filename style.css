@@ -114,6 +114,6 @@ popover contents {
 #important_button_toggled {
     color: #282828;
     background-color: #edf030;
-    border: none;
+    border: 2px solid #edf030;
     font-size: 1.5rem;
 }

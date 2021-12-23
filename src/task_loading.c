@@ -23,7 +23,7 @@ void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, c
     sqlite3 *db = db_elements->db;
 
     if( strcmp(importance, "normal") == 0 && finished == 0 ) {
-       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE (finished = 0 AND importance = 'normal')"; 
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0"; 
     } else if ( finished == 1 ) {
        sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1"; 
     }

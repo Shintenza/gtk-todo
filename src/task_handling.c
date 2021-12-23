@@ -66,8 +66,14 @@ void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
         gtk_box_remove(GTK_BOX(params->popover_box), params->warning_label);
     }
 }
-void toggle_task_importance (GtkWidget *popover, gpointer data) {
-   return; 
+void toggle_task_importance (GtkWidget *button, gpointer data) {
+    const char *button_name = gtk_widget_get_name(button);
+    if (strcmp(button_name, "important_button") == 0) {
+        gtk_widget_set_name(button, "important_button_toggled");
+    } else {
+        gtk_widget_set_name(button, "important_button");
+    }
+    return; 
 }
 void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     const char *task_name = params->task_name;
@@ -137,6 +143,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
     
     g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db_elements);
+    g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), NULL);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *dialog; 
