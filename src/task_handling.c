@@ -47,7 +47,6 @@ void task_remove(GtkWidget *button, gpointer data) {
     char *sql = malloc(100);
     const char *element_id = gtk_widget_get_name(task_box);
     sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
-    gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Operation failed\n");
@@ -57,6 +56,7 @@ void task_remove(GtkWidget *button, gpointer data) {
         sqlite3_close(db);
         return;
     }
+    gtk_box_remove(GTK_BOX(tasks_box), task_box);
     free(sql);
 }
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
@@ -191,7 +191,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
         char *sql = malloc(sizeof(char)*1000);
-        sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, params->string_date, params->unix_datetime);
+        sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, params->string_date, params->unix_datetime);
     
         db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
         gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
