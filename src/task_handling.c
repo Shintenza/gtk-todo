@@ -81,6 +81,8 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *task_remove_button = gtk_button_new_with_label("Usuń");
     GtkWidget *button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    GtkWidget *importatnt_button = gtk_button_new_with_label("");
+    GtkWidget *name_and_important_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkStyleContext *context;
     static struct MoveTaskParams move_task_params;
 
@@ -108,19 +110,25 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_name(task_remove_button, "task_remove_button");
     gtk_widget_set_name(task_done_button, "task_add_button");
     gtk_widget_set_name(task_name_label, "task_name_label");
+    gtk_widget_set_name(name_and_important_box, "ni_box");
+    gtk_widget_set_name(importatnt_button, "important_button");
     gtk_widget_set_name(GTK_WIDGET(single_task_box), string_id);
 
     gtk_widget_set_halign(button_box, GTK_ALIGN_END);
     gtk_widget_set_valign(button_box, GTK_ALIGN_END);
-    gtk_widget_set_halign(task_name_label, GTK_ALIGN_START);
     gtk_widget_set_halign(task_date_label, GTK_ALIGN_START);
     gtk_widget_set_halign(task_desc_label, GTK_ALIGN_START);
+    gtk_widget_set_halign(task_name_label, GTK_ALIGN_START);
+    gtk_widget_set_halign(importatnt_button, GTK_ALIGN_END);
     gtk_widget_set_hexpand(task_name_label, TRUE);
+    gtk_widget_set_hexpand(name_and_important_box, TRUE);
 
-    gtk_box_append(GTK_BOX(single_task_box), task_name_label);
+    gtk_box_append(GTK_BOX(single_task_box), name_and_important_box);
     gtk_box_append(GTK_BOX(single_task_box), task_date_label);
     gtk_box_append(GTK_BOX(single_task_box), task_desc_label);
     gtk_box_append(GTK_BOX(single_task_box), button_box);
+    gtk_box_append(GTK_BOX(name_and_important_box), task_name_label);
+    gtk_box_append(GTK_BOX(name_and_important_box), importatnt_button);
     gtk_box_append(GTK_BOX(button_box), task_remove_button);
     gtk_box_append(GTK_BOX(button_box), task_done_button);
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  

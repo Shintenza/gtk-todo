@@ -103,3 +103,17 @@ popover contents {
 #task_remove_button:hover {
     background: #e30f00;
 }
+#ni_box {
+    border-bottom: 2px dotted white;
+    padding-bottom: 10px;
+}
+#important_button {
+    color: #edf030;
+    font-size: 1.5rem;
+}
+#important_button_toggled {
+    color: #282828;
+    background-color: #edf030;
+    border: none;
+    font-size: 1.5rem;
+}
