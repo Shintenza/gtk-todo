@@ -15,7 +15,7 @@ int db_init(struct DbElements *db_elements) {
                                                    task_desc TEXT, \
                                                    date_string TEXT,\
                                                    date INT,       \
-                                                   importance TEXT,\
+                                                   importance BOOLEAN NOT NULL CHECK (finished IN (0, 1)),\
                                                    finished BOOLEAN NOT NULL CHECK (finished IN (0, 1)));";
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if( rc != SQLITE_OK ) {
