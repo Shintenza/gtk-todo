@@ -193,7 +193,8 @@ void data_handler(GtkWidget *button, gpointer data) {
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
     struct DbElements *db_elements = add_task_params->db_elements;
     static struct AddNewTaskParams add_new_task_params;
-    char *sql = malloc(sizeof(char)*1000);
+    /*TODO pass proper amount of bytes*/
+    char *sql = malloc(10000);
 
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
@@ -227,13 +228,18 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.finished = 0;
         fn_params.date_string = add_task_params->string_date;
         fn_params.db_elements = db_elements;
-        if (strcmp(gtk_widget_get_name(parent_box), "edited") == 0) {
+        if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
+            const char *rowid = gtk_widget_get_name(parent_box);
+            /*removes first letter from string, can u do that this way in other languages losers?*/
+            rowid++;
             gtk_box_remove(GTK_BOX(parent_box), add_task_box);
             while(gtk_widget_get_next_sibling(parent_box_child)!=NULL){
                 gtk_widget_set_visible(parent_box_child, true);
                 parent_box_child = gtk_widget_get_next_sibling(parent_box_child);
             }
             gtk_widget_set_visible(gtk_widget_get_last_child(parent_box), true);
+            sprintf(sql, "UPDATE tasks SET task_name = '%s', task_desc = '%s', date_string = '%s', date = '%ld' WHERE rowid = %s",\
+                    task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime, rowid);
         } else {
             create_new_task_box(&fn_params, element_id);
             sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime);
@@ -407,7 +413,9 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
     if(strcmp(gtk_widget_get_name(button), "edit_button")==0) {
         existing_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
-        gtk_widget_set_name(existing_box, "edited");
+        char temp_name[100];
+        sprintf(temp_name, "e%s", gtk_widget_get_name(existing_box));
+        gtk_widget_set_name(existing_box, temp_name);
         gtk_widget_set_sensitive(existing_box, true);
         GtkWidget *child = gtk_widget_get_first_child(existing_box);
         GtkWidget *name_label = gtk_widget_get_first_child(child);
