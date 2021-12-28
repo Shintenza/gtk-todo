@@ -330,13 +330,20 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     GtkWidget *floating_add_button = cancel_params->floating_add_button;
     GtkWidget *add_task_box = cancel_params->add_task_box;
     GtkWidget *add_task_box_parent = gtk_widget_get_parent(add_task_box);
+    GtkWidget *existing_task = gtk_widget_get_first_child(cancel_params->tasks_box);
 
     gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
-    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), cancel_params->add_task_params);
     is_add_task_active = !is_add_task_active;
-    gtk_widget_set_sensitive(cancel_params->tasks_box, TRUE);
+
+    gtk_widget_set_sensitive(existing_task, true);
+    while(gtk_widget_get_next_sibling(existing_task)!=NULL) {
+        existing_task = gtk_widget_get_next_sibling(existing_task);
+        gtk_widget_set_sensitive(existing_task, true);
+    }
+
+    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), cancel_params->add_task_params);
 }
 void add_new_task(GtkWidget *button, gpointer data) {
     if(!is_add_task_active) {
@@ -346,16 +353,17 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *parent_window = add_new_task_params->window;
         GtkWidget *add_date_button = gtk_menu_button_new();
         GtkWidget *floating_add_button = add_new_task_params->floating_add_button;
-        GtkWidget *popover = gtk_popover_new();
-        GtkWidget *popover_box;
-        GtkWidget *popover_sub_box;
-        GtkWidget *calendar;
-        GtkWidget *spin_button_hour;
-        GtkWidget *spin_button_min;
-        GtkWidget *button;
+        GtkWidget *popover = gtk_popover_new(), *popover_box, *popover_sub_box;
+        GtkWidget *calendar, *spin_button_hour, *spin_button_min, *button;
         GtkWidget *add_task_box, *task_name_entry, *task_desc_entry, *add_button, *label;
+        GtkWidget *existing_task = gtk_widget_get_first_child(tasks_box);
         GtkEntryBuffer *task_name_buffer, *task_desc_buffer;
+
         struct DbElements *db_elements = add_new_task_params->db_elements;
+        static struct TaskDataParams params;
+        static struct HandleDate date_params;
+        static struct CancelAddingNewTaskParams cancel_params;
+
         gtk_button_set_label(GTK_BUTTON(floating_add_button), "X");
         gtk_widget_set_name(floating_add_button, "f_add_button_red");
         
@@ -376,7 +384,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
         
 
         add_button = gtk_button_new_with_label("Dodaj");
-        static struct TaskDataParams params;
         params.task_name_buffer = task_name_buffer;
         params.task_desc_buffer = task_desc_buffer;
         params.window = parent_window;
@@ -396,32 +403,36 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_box_append(GTK_BOX(add_task_box), task_name_entry);
         gtk_box_append(GTK_BOX(add_task_box), task_desc_entry);
         gtk_box_append(GTK_BOX(add_task_box), add_date_button);
-
         gtk_box_append(GTK_BOX(add_task_box), add_button);
-        /* make tasks box inactive*/
-        gtk_widget_set_sensitive(tasks_box, false);
+       
+        /*locks others tasks interactions while adding a new one*/
+
+        gtk_widget_set_sensitive(existing_task, false);
+        while(gtk_widget_get_next_sibling(existing_task)!=NULL) {
+            existing_task = gtk_widget_get_next_sibling(existing_task);
+            gtk_widget_set_sensitive(existing_task, false);
+        }
 
         gtk_box_prepend(GTK_BOX(right_box), add_task_box);
         is_add_task_active= !is_add_task_active;
 
-        gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
         popover_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-        gtk_popover_set_child(GTK_POPOVER(popover), GTK_WIDGET(popover_box));
         calendar = gtk_calendar_new();
-        gtk_box_append(GTK_BOX(popover_box), calendar);
         label = gtk_label_new("Ustaw godzinę/minutę");
-        gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(label));
         spin_button_hour = gtk_spin_button_new_with_range(0, 24, 1);
         popover_sub_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button_hour));
         spin_button_min= gtk_spin_button_new_with_range(0, 60, 1);
+        button = gtk_button_new_with_label("Potwierdź");
+
+        gtk_popover_set_has_arrow(GTK_POPOVER(popover), FALSE);
+        gtk_popover_set_child(GTK_POPOVER(popover), GTK_WIDGET(popover_box));
+        gtk_box_append(GTK_BOX(popover_box), calendar);
+        gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(label));
+        gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button_hour));
         gtk_box_append(GTK_BOX(popover_sub_box), GTK_WIDGET(spin_button_min));
         gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(popover_sub_box));
-        button = gtk_button_new_with_label("Potwierdź");
         gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(button));
 
-        
-        static struct HandleDate date_params;
         date_params.add_task_box = add_task_box;
         date_params.calendar = calendar;
         date_params.hour_input = spin_button_hour;
@@ -432,7 +443,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         date_params.params = &params;
         date_params.desc_entry = task_desc_entry;
         date_params.add_date_button = add_date_button;
-        static struct CancelAddingNewTaskParams cancel_params;
+
         cancel_params.add_task_box = add_task_box;
         cancel_params.floating_add_button = floating_add_button;
         cancel_params.add_task_params = add_new_task_params;
