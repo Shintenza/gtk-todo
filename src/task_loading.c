@@ -16,10 +16,11 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
     new_task_box_params.finished = load_tasks_from_db_args->finished;
     new_task_box_params.importance = importance;
+    new_task_box_params.add_params = load_tasks_from_db_args->add_new_task_params;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };
-void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished) {
+void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished, struct AddNewTaskParams *add_params) {
     char *sql;
     int rc = db_elements->rc;
     sqlite3 *db = db_elements->db;
@@ -38,6 +39,7 @@ void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, c
     }
     load_tasks_from_db_callback_args.tasks_box = tasks_box;
     load_tasks_from_db_callback_args.db_elements = db_elements;
+    load_tasks_from_db_callback_args.add_new_task_params = add_params;
     load_tasks_from_db_callback_args.finished = finished;
 
     rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
@@ -51,9 +53,9 @@ void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, c
 }
 void load_archived_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 1);
+    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 1, load_tasks_params->add_new_task_params);
 }
 void load_active_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 0);
+    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 0, load_tasks_params->add_new_task_params);
 }

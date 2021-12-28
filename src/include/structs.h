@@ -27,22 +27,30 @@ struct TaskDataParams {
     char * string_date;
     gint64 unix_datetime;
 };
+struct ExistingElements {
+    const char *existing_task_name;
+    const char *existing_task_desc;
+};
 struct AddNewTaskParams {
-   GtkWidget *window;
-   GtkWidget *tasks_box;
-   GtkWidget *right_box;
-   GtkWidget *floating_add_button;
-   struct DbElements *db_elements;
+    GtkWidget *window;
+    GtkWidget *tasks_box;
+    GtkWidget *right_box;
+    GtkWidget *floating_add_button;
+    int edit_mode;
+    struct DbElements *db_elements;
+    struct ExistingElements *existing_elements;
 };
 struct CancelAddingNewTaskParams {
     GtkWidget *floating_add_button;
     GtkWidget *add_task_box;
     GtkWidget *tasks_box;
+    GtkWidget *existing_box;
     struct AddNewTaskParams *add_task_params;
 };
 struct CreateNewTaskBoxParams {
     GtkWidget *tasks_box;
     struct DbElements *db_elements;
+    struct AddNewTaskParams *add_params;
     const char *task_name;
     const char *task_desc;
     const char *date_string;
@@ -79,6 +87,7 @@ struct MoveTaskParams {
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
     struct DbElements *db_elements;
+    struct AddNewTaskParams *add_new_task_params;
     int finished;
 };
 struct ToggleTaskImportance {

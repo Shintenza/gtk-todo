@@ -51,6 +51,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     params.tasks_box = tasks_box;
     params.db_elements = db_elements;
     params.floating_add_button = floating_add_button;
+    params.edit_mode = 0;
     load_tasks_params.tasks_box = tasks_box;
     load_tasks_params.db_elements = db_elements;
     
@@ -87,7 +88,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
     g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &params);
-    load_tasks_from_db(db_elements, tasks_box, "normal", 0);
+    load_tasks_from_db(db_elements, tasks_box, "normal", 0, &params);
 
     gtk_window_present (GTK_WINDOW (window));
 }
