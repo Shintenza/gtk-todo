@@ -229,10 +229,20 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.date_string = add_task_params->string_date;
         fn_params.db_elements = db_elements;
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
-            const char *rowid = gtk_widget_get_name(parent_box);
-            /*removes first letter from string, can u do that this way in other languages losers?*/
-            rowid++;
+            char rowid[100];
+            sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
+            /*removes first letter from char array*/
+            memmove(rowid, rowid+1, strlen(rowid));
+
+            gtk_widget_set_name(parent_box, rowid);
+
             gtk_box_remove(GTK_BOX(parent_box), add_task_box);
+            GtkWidget *name_label = gtk_widget_get_first_child(parent_box_child);
+            GtkWidget *date_label = gtk_widget_get_next_sibling(gtk_widget_get_first_child(parent_box));
+            GtkWidget *desc_label = gtk_widget_get_next_sibling(date_label);
+            gtk_label_set_text(GTK_LABEL(name_label), task_name);
+            gtk_label_set_text(GTK_LABEL(desc_label), task_desc);
+
             while(gtk_widget_get_next_sibling(parent_box_child)!=NULL){
                 gtk_widget_set_visible(parent_box_child, true);
                 parent_box_child = gtk_widget_get_next_sibling(parent_box_child);
@@ -363,6 +373,11 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
             gtk_widget_set_visible(child, true);
             child = gtk_widget_get_next_sibling(child);
         }
+        char rowid[100];
+        sprintf(rowid, "%s", gtk_widget_get_name(add_task_box_parent));
+        /*removes first letter from char array*/
+        memmove(rowid, rowid+1, strlen(rowid));
+        gtk_widget_set_name(add_task_box_parent, rowid);
         gtk_widget_set_visible(gtk_widget_get_parent(button), true);
     }
     gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
@@ -433,7 +448,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
         gtk_widget_set_visible(child, false);
         gtk_entry_buffer_set_text(task_name_buffer, task_name, strlen(task_name));
-        gtk_entry_buffer_set_text(task_desc_buffer, task_desc, strlen(task_name));
+        gtk_entry_buffer_set_text(task_desc_buffer, task_desc, strlen(task_desc));
         gtk_box_append(GTK_BOX(existing_box), fields_box);
         label = gtk_label_new("Edytowanie zadania");
         cancel_params.edit_mode = 1;
