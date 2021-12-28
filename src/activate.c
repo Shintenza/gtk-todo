@@ -47,10 +47,8 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
     gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
-    params.window = window;
     params.tasks_box = tasks_box;
     params.db_elements = db_elements;
-    params.floating_add_button = floating_add_button;
     load_tasks_params.tasks_box = tasks_box;
     load_tasks_params.db_elements = db_elements;
     
@@ -78,7 +76,6 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_overlay_set_child(GTK_OVERLAY(overlay), scrolled_window);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), right_box);
     gtk_box_append(GTK_BOX(right_box), tasks_box);
-    params.right_box = right_box;
     gtk_overlay_add_overlay(GTK_OVERLAY(overlay), floating_add_button);
     gtk_widget_set_halign(floating_add_button, GTK_ALIGN_END);
     gtk_widget_set_valign(floating_add_button, GTK_ALIGN_END);

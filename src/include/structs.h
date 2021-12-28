@@ -28,16 +28,14 @@ struct TaskDataParams {
     gint64 unix_datetime;
 };
 struct AddNewTaskParams {
-   GtkWidget *window;
    GtkWidget *tasks_box;
-   GtkWidget *right_box;
-   GtkWidget *floating_add_button;
    struct DbElements *db_elements;
 };
 struct CancelAddingNewTaskParams {
     GtkWidget *floating_add_button;
     GtkWidget *add_task_box;
     GtkWidget *tasks_box;
+    int edit_mode;
     struct AddNewTaskParams *add_task_params;
 };
 struct CreateNewTaskBoxParams {
