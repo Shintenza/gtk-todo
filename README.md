@@ -45,13 +45,11 @@ Wszystkie z powyższych zależności dostępne są chyba dla każdej dystrybucji
 │   ├── messages.c
 │   ├── task_handling.c
 │   └── task_loading.c
-├── style.css
-├── test.c
-└── todo.db
+└── style.css
 ```
 
 Skrótowy opis poszczególnych plików:
-- compile_commands.json - plik potrzebny do pracy z [clangd](#https://clangd.llvm.org/) i moim edytorem tekstu [nvim-code](#https://gitea.shintenza.tk/Shintenza/nvim-code.git)
+- compile_commands.json - plik potrzebny do pracy z [clangd](https://clangd.llvm.org/) i moim edytorem tekstu [nvim-code](https://gitea.shintenza.tk/Shintenza/nvim-code.git)
 - activate.c - tutaj tworzona jest baza interfejsu graficznego 
 - db_init.c - plik odpowiedzialny za inicjalizację bazy danych
 - cli_handling.c - wersja cli programu
