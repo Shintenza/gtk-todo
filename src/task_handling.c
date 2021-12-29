@@ -110,7 +110,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     GtkWidget *single_task_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     GtkWidget *importatnt_button = gtk_button_new_with_label("");
-    GtkWidget *edit_button = gtk_button_new_with_label("Edit");
+    GtkWidget *edit_button = gtk_button_new_with_label("");
     GtkWidget *name_and_important_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkStyleContext *context;
     static struct MoveTaskParams move_task_params;
@@ -154,8 +154,10 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_halign(task_desc_label, GTK_ALIGN_START);
     gtk_widget_set_halign(task_name_label, GTK_ALIGN_START);
     gtk_widget_set_halign(importatnt_button, GTK_ALIGN_END);
+    gtk_widget_set_halign(edit_button, GTK_ALIGN_START);
     gtk_widget_set_hexpand(task_name_label, TRUE);
     gtk_widget_set_hexpand(name_and_important_box, TRUE);
+
 
     gtk_box_append(GTK_BOX(single_task_box), name_and_important_box);
     gtk_box_append(GTK_BOX(single_task_box), task_date_label);
@@ -163,9 +165,9 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(single_task_box), button_box);
     gtk_box_append(GTK_BOX(name_and_important_box), task_name_label);
     gtk_box_append(GTK_BOX(name_and_important_box), importatnt_button);
+    gtk_box_append(GTK_BOX(button_box), edit_button);
     gtk_box_append(GTK_BOX(button_box), task_remove_button);
     gtk_box_append(GTK_BOX(button_box), task_done_button);
-    gtk_box_append(GTK_BOX(button_box), edit_button);
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
     
     params->date_string = 0;
@@ -240,8 +242,11 @@ void data_handler(GtkWidget *button, gpointer data) {
             GtkWidget *name_label = gtk_widget_get_first_child(parent_box_child);
             GtkWidget *date_label = gtk_widget_get_next_sibling(gtk_widget_get_first_child(parent_box));
             GtkWidget *desc_label = gtk_widget_get_next_sibling(date_label);
+            char string_date_formated[40];
+            sprintf(string_date_formated, "Zaplanowano na: %s", add_task_params->string_date);
             gtk_label_set_text(GTK_LABEL(name_label), task_name);
             gtk_label_set_text(GTK_LABEL(desc_label), task_desc);
+            gtk_label_set_text(GTK_LABEL(date_label), string_date_formated);
 
             while(gtk_widget_get_next_sibling(parent_box_child)!=NULL){
                 gtk_widget_set_visible(parent_box_child, true);
