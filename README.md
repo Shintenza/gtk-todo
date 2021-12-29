@@ -67,6 +67,7 @@ Przed przystąpieniem do kompilacji projektu zainstaluj wymagane zależności:
 
 ArchLinux:
 > sudo pacman -S sqlite gtk4 make gcc
+
 Debian:
 > sudo apt install sqlite3 gtk4 make gcc
 
