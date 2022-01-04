@@ -2,7 +2,7 @@
 #include <gtk/gtk.h>
 #include <sqlite3.h>
 
-int db_init(struct DbElements *db_elements) {
+int db_init(sqlite3 **given_db) {
     sqlite3 *db;
     char *err_msg = 0;
     int rc = sqlite3_open("./todo.db", &db);
@@ -24,8 +24,6 @@ int db_init(struct DbElements *db_elements) {
         sqlite3_close(db);
         return 1;
     }
-    db_elements->db = db;
-    db_elements->err_msg = err_msg;
-    db_elements->rc = rc; 
+    *given_db = db;
     return 0;
 }

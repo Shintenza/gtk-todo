@@ -12,7 +12,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
     struct ActivateParams *activate_params = user_data;
-    struct DbElements *db_elements = activate_params->db_elements;
+    sqlite3 *db = activate_params->db;
     static struct AddNewTaskParams params;
     static struct LoadTasksFromDbParams load_tasks_params;
 
@@ -48,9 +48,9 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
     params.tasks_box = tasks_box;
-    params.db_elements = db_elements;
+    params.db = db;
     load_tasks_params.tasks_box = tasks_box;
-    load_tasks_params.db_elements = db_elements;
+    load_tasks_params.db = db;
     
     button = gtk_button_new_with_label("Aktywne");
     gtk_box_append(GTK_BOX(side_menu), button);
@@ -84,7 +84,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
     g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &params);
-    load_tasks_from_db(db_elements, tasks_box, "normal", 0);
+    load_tasks_from_db(db, tasks_box, "normal", 0);
 
     gtk_window_present (GTK_WINDOW (window));
 }

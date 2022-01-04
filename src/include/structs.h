@@ -3,15 +3,8 @@
 #include <gtk/gtk.h>
 #include <sqlite3.h>
 
-struct DbElements {
-    char *err_msg;
-    sqlite3 *db; 
-    int rc;
-};
 struct ActivateParams {
-    struct DbElements *db_elements;
-    bool *is_add_task_active;
-    bool *sent_wrong_date_alert; 
+    sqlite3 *db;
 };
 struct TaskDataParams {
     GtkEntryBuffer *task_name_buffer;
@@ -23,13 +16,13 @@ struct TaskDataParams {
     GtkWidget *time_label;
     GtkWidget *right_box;
     GtkWidget *floating_add_button;
-    struct DbElements *db_elements;
+    sqlite3 *db;
     char * string_date;
     gint64 unix_datetime;
 };
 struct AddNewTaskParams {
    GtkWidget *tasks_box;
-   struct DbElements *db_elements;
+   sqlite3 *db;
 };
 struct CancelAddingNewTaskParams {
     GtkWidget *floating_add_button;
@@ -40,7 +33,7 @@ struct CancelAddingNewTaskParams {
 };
 struct CreateNewTaskBoxParams {
     GtkWidget *tasks_box;
-    struct DbElements *db_elements;
+    sqlite3 *db;
     const char *task_name;
     const char *task_desc;
     const char *date_string;
@@ -65,18 +58,14 @@ struct ResetWrongDateAlertBoxParams {
     GtkWidget *warning_label;
     GtkWidget *popover_box;
 };
-struct ArchiveTaskParams {
-    struct DbElements *db_elements;
-    GtkWidget *tasks_box;
-};
 struct MoveTaskParams {
-    struct DbElements *db_elements;
+    sqlite3 *db;
     GtkWidget *tasks_box;
     int operation;
 };
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
-    struct DbElements *db_elements;
+    sqlite3 *db;
     int finished;
 };
 struct ToggleTaskImportance {

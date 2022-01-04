@@ -12,7 +12,7 @@ void task_move(GtkWidget *button, gpointer data) {
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
     int rc;
     int operation = move_task_params->operation;
-    sqlite3 *db = move_task_params->db_elements->db;
+    sqlite3 *db = move_task_params->db;
     char *err_msg = 0;
     char *sql = malloc(100);
     const char *element_id = gtk_widget_get_name(task_box);
@@ -39,11 +39,10 @@ void task_move(GtkWidget *button, gpointer data) {
     free(sql);
 }
 void task_remove(GtkWidget *button, gpointer data) {
-    struct DbElements *db_elements= data;
+    sqlite3 *db = data;
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
     int rc;
-    sqlite3 *db =db_elements->db;
     char *err_msg = 0;
     char *sql = malloc(100);
     const char *element_id = gtk_widget_get_name(task_box);
@@ -123,7 +122,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     sprintf(date_string_label, "Zaplanowano na: %s", date_string);
     task_date_label=gtk_label_new(date_string_label);
     
-    move_task_params.db_elements = params->db_elements;
+    move_task_params.db = params->db;
     move_task_params.tasks_box = params->tasks_box;
 
     if (finished == 0) {
@@ -174,9 +173,9 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     appended_inform_label = false;
     static struct AddNewTaskParams add_params;
     add_params.tasks_box = tasks_box;
-    add_params.db_elements = params->db_elements;
-    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db_elements);
-    g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db_elements->db);
+    add_params.db = params->db;
+    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db);
+    g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db);
     g_signal_connect(edit_button, "clicked", G_CALLBACK(add_new_task), &add_params);
 }
 void data_handler(GtkWidget *button, gpointer data) {
@@ -193,10 +192,12 @@ void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *parent_box_child = gtk_widget_get_first_child(parent_box);
     const gchar *task_name = gtk_entry_buffer_get_text(task_name_buffer);
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
-    struct DbElements *db_elements = add_task_params->db_elements;
+    sqlite3 *db = add_task_params->db;
     static struct AddNewTaskParams add_new_task_params;
     /*TODO pass proper amount of bytes*/
     char *sql = malloc(10000);
+    int rc = 0;
+    char *err_msg;
 
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
@@ -221,7 +222,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         g_signal_connect (dialog, "response", G_CALLBACK (gtk_window_destroy), NULL);
         gtk_widget_show(GTK_WIDGET(dialog));
     } else {
-        int element_id = sqlite3_last_insert_rowid(db_elements->db) + 1;
+        int element_id = sqlite3_last_insert_rowid(db) + 1;
 
         static struct CreateNewTaskBoxParams fn_params;
         fn_params.tasks_box = tasks_box;
@@ -229,7 +230,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.task_desc = task_desc;
         fn_params.finished = 0;
         fn_params.date_string = add_task_params->string_date;
-        fn_params.db_elements = db_elements;
+        fn_params.db = db;
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
@@ -270,16 +271,16 @@ void data_handler(GtkWidget *button, gpointer data) {
         }
 
     
-        db_elements->rc = sqlite3_exec(db_elements->db, sql, 0,0, &db_elements->err_msg);
+        rc = sqlite3_exec(db, sql, 0,0, &err_msg);
         gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
         gtk_widget_set_name(floating_add_button, "f_add_button");
         add_new_task_params.tasks_box = tasks_box;
-        add_new_task_params.db_elements  = db_elements;
+        add_new_task_params.db  = db;
         g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_params);
         free(sql);
-        if( db_elements->rc != SQLITE_OK ) {
-            fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db_elements->db));
-            sqlite3_close(db_elements->db);
+        if( rc != SQLITE_OK ) {
+            fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
         }
     }
 }
@@ -414,8 +415,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     GtkWidget *existing_task = gtk_widget_get_first_child(tasks_box);
     GtkWidget *existing_box;
     GtkEntryBuffer *task_name_buffer = gtk_entry_buffer_new(NULL, 0) , *task_desc_buffer = gtk_entry_buffer_new(NULL, 0);
-
-    struct DbElements *db_elements = add_new_task_params->db_elements;
+    sqlite3 *db = add_new_task_params->db;
     static struct TaskDataParams params;
     static struct HandleDate date_params;
     static struct CancelAddingNewTaskParams cancel_params;
@@ -477,7 +477,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     params.window = window;
     params.tasks_box = tasks_box;
     params.add_task_box = fields_box;
-    params.db_elements = db_elements;
+    params.db = db;
     params.right_box = right_box;
     params.floating_add_button = floating_add_button;
     params.string_date = 0;

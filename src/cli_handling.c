@@ -318,8 +318,8 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     free(sql);
 }
 
-int cli_handling (int argc, char **argv, struct DbElements *db_elements) {
-    sqlite3 *db = db_elements->db;
+int cli_handling (int argc, char **argv, sqlite3 *given_db) {
+    sqlite3 *db = given_db;
     char *main_flag = argv[1];
     int entries_counter = 0;
     int tasks_array_len = 0;

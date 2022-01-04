@@ -8,21 +8,17 @@
 #include "include/cli_handling.h"
 
 int main(int argc, char **argv) {
+    sqlite3 *db;
     GtkApplication *app;
     int status;
     int cli_response = 0;
-    bool is_add_task_active = false;
-    bool sent_wrong_date_alert = false; 
-    static struct DbElements db_elements;
     struct ActivateParams activate_params;
 
-    db_init(&db_elements);
-    activate_params.db_elements = &db_elements;
-    activate_params.is_add_task_active = &is_add_task_active;
-    activate_params.sent_wrong_date_alert = &sent_wrong_date_alert;
+    db_init(&db);
+    activate_params.db = db;
 
     if (argc >= 2) {
-        cli_response = cli_handling(argc, argv, &db_elements);
+        cli_response = cli_handling(argc, argv, db);
     }
     
     if (cli_response > 0) {

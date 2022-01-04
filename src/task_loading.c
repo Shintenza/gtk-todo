@@ -13,16 +13,17 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.task_desc = argv[2];
     new_task_box_params.tasks_box = tasks_box;
     new_task_box_params.date_string = argv[3];
-    new_task_box_params.db_elements = load_tasks_from_db_args->db_elements;
+    new_task_box_params.db = load_tasks_from_db_args->db;
     new_task_box_params.finished = load_tasks_from_db_args->finished;
     new_task_box_params.importance = importance;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };
-void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, char *importance, int finished) {
+void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importance, int finished) {
     char *sql;
-    int rc = db_elements->rc;
-    sqlite3 *db = db_elements->db;
+    int rc;
+    sqlite3 *db = given_db;
+    char *err_msg;
 
     if( strcmp(importance, "normal") == 0 && finished == 0 ) {
        sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0"; 
@@ -37,23 +38,23 @@ void load_tasks_from_db (struct DbElements *db_elements, GtkWidget *tasks_box, c
         gtk_box_remove(GTK_BOX(tasks_box), last_child);
     }
     load_tasks_from_db_callback_args.tasks_box = tasks_box;
-    load_tasks_from_db_callback_args.db_elements = db_elements;
+    load_tasks_from_db_callback_args.db= db;
     load_tasks_from_db_callback_args.finished = finished;
 
-    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &db_elements->err_msg);
+    rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &err_msg);
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Failed to select data\n");
-        fprintf(stderr, "SQL error: %s\n", db_elements->err_msg);
+        fprintf(stderr, "SQL error: %s\n", err_msg);
 
-        sqlite3_free(db_elements->err_msg);
+        sqlite3_free(err_msg);
         sqlite3_close(db);
     }
 }
 void load_archived_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 1);
+    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 1);
 }
 void load_active_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db_elements, load_tasks_params->tasks_box, "normal", 0);
+    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 0);
 }
