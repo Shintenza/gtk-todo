@@ -4,6 +4,7 @@
 #include "include/task_loading.h"
 
 void activate(GtkApplication *app, gpointer user_data) {
+    struct ActivateParams *activate_params = user_data;
     GtkWidget *window = gtk_application_window_new(app);
     GtkWidget *vbox, *main_box, *side_menu, *tasks_box, *button, *scrolled_window, *add_task_button, *right_box;
     GtkWidget *header_bar = gtk_header_bar_new();
@@ -11,9 +12,10 @@ void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *floating_add_button = gtk_button_new_with_label("+");
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
-    struct ActivateParams *activate_params = user_data;
     sqlite3 *db = activate_params->db;
-    static struct AddNewTaskParams params;
+    struct UIStates *ui_states = activate_params->ui_states;
+
+    static struct AddNewTaskParams add_new_task_parms;
     static struct LoadTasksFromDbParams load_tasks_params;
 
     gtk_widget_set_name(floating_add_button, "f_add_button");
@@ -47,8 +49,9 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
     gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
-    params.tasks_box = tasks_box;
-    params.db = db;
+    add_new_task_parms.tasks_box = tasks_box;
+    add_new_task_parms.db = db;
+    add_new_task_parms.ui_states = ui_states;
     load_tasks_params.tasks_box = tasks_box;
     load_tasks_params.db = db;
     
@@ -56,11 +59,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_box_append(GTK_BOX(side_menu), button);
     gtk_widget_set_margin_bottom(button, 10);
     g_signal_connect(button, "clicked", G_CALLBACK(load_active_tasks), &load_tasks_params);
-    
-    /* button = gtk_button_new_with_label("Nadchodzące"); */
-    /* gtk_box_append(GTK_BOX(side_menu), button); */
-    /* gtk_widget_set_margin_bottom(button, 10); */
-    
+
     button = gtk_button_new_with_label("Archiwum");
     gtk_box_append(GTK_BOX(side_menu), button);
     gtk_widget_set_margin_bottom(button, 10);
@@ -82,8 +81,8 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_margin_bottom(floating_add_button, 20);
     gtk_widget_set_margin_end(floating_add_button, 20);
 
-    g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &params);
-    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &params);
+    g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
+    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
     load_tasks_from_db(db, tasks_box, "normal", 0);
 
     gtk_window_present (GTK_WINDOW (window));

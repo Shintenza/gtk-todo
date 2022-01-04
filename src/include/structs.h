@@ -3,8 +3,14 @@
 #include <gtk/gtk.h>
 #include <sqlite3.h>
 
+struct UIStates {
+    int is_add_task_active;
+    int sent_wrong_date_alert; 
+    int appended_inform_label;
+};
 struct ActivateParams {
     sqlite3 *db;
+    struct UIStates *ui_states;
 };
 struct TaskDataParams {
     GtkEntryBuffer *task_name_buffer;
@@ -19,9 +25,11 @@ struct TaskDataParams {
     sqlite3 *db;
     char * string_date;
     gint64 unix_datetime;
+    struct UIStates *ui_states;
 };
 struct AddNewTaskParams {
    GtkWidget *tasks_box;
+   struct UIStates *ui_states;
    sqlite3 *db;
 };
 struct CancelAddingNewTaskParams {
@@ -51,12 +59,14 @@ struct HandleDate {
     GtkWidget *hour_input;
     GtkWidget *min_input;
     GtkWidget *add_date_button;
+    struct UIStates *ui_states;
     struct TaskDataParams *params;
     bool sent_warning;
 };
 struct ResetWrongDateAlertBoxParams {
     GtkWidget *warning_label;
     GtkWidget *popover_box;
+    struct UIStates *ui_states;
 };
 struct MoveTaskParams {
     sqlite3 *db;

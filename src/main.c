@@ -12,10 +12,9 @@ int main(int argc, char **argv) {
     GtkApplication *app;
     int status;
     int cli_response = 0;
-    struct ActivateParams activate_params;
-
+    struct UIStates ui_states = { 0, 0, 0 };
     db_init(&db);
-    activate_params.db = db;
+    struct ActivateParams activate_params = { db, &ui_states };
 
     if (argc >= 2) {
         cli_response = cli_handling(argc, argv, db);

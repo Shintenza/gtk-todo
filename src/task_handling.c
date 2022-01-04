@@ -2,8 +2,6 @@
 #include "include/structs.h"
 #include "include/task_handling.h"
 
-bool is_add_task_active = false;
-bool sent_wrong_date_alert = false; 
 bool appended_inform_label = false;
 
 void task_move(GtkWidget *button, gpointer data) {
@@ -61,8 +59,9 @@ void task_remove(GtkWidget *button, gpointer data) {
 }
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     struct ResetWrongDateAlertBoxParams *params = data;
-    if(sent_wrong_date_alert) {
-        sent_wrong_date_alert = false;
+    struct UIStates *ui_states = params->ui_states;
+    if(ui_states->sent_wrong_date_alert) {
+        ui_states->sent_wrong_date_alert = 0;
         gtk_box_remove(GTK_BOX(params->popover_box), params->warning_label);
     }
 }
@@ -194,6 +193,7 @@ void data_handler(GtkWidget *button, gpointer data) {
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
     sqlite3 *db = add_task_params->db;
     static struct AddNewTaskParams add_new_task_params;
+    struct UIStates *ui_states = add_task_params->ui_states;
     /*TODO pass proper amount of bytes*/
     char *sql = malloc(10000);
     int rc = 0;
@@ -260,7 +260,7 @@ void data_handler(GtkWidget *button, gpointer data) {
             create_new_task_box(&fn_params, element_id);
             sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime);
         }
-        is_add_task_active = false;
+        ui_states->is_add_task_active = 0;
         gtk_box_remove(GTK_BOX(add_task_params->right_box), add_task_box);
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
@@ -276,6 +276,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         gtk_widget_set_name(floating_add_button, "f_add_button");
         add_new_task_params.tasks_box = tasks_box;
         add_new_task_params.db  = db;
+        add_new_task_params.ui_states = ui_states;
         g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_params);
         free(sql);
         if( rc != SQLITE_OK ) {
@@ -287,6 +288,7 @@ void data_handler(GtkWidget *button, gpointer data) {
 void date_handler (GtkMenuButton *button, gpointer data) {
     struct HandleDate *params = data;
     static struct ResetWrongDateAlertBoxParams callback_params;
+    struct UIStates *ui_states = params->ui_states;
     GDateTime *date = gtk_calendar_get_date(GTK_CALENDAR(params->calendar));
     int day = g_date_time_get_day_of_month(date);
     int month = g_date_time_get_month(date);
@@ -316,13 +318,14 @@ void date_handler (GtkMenuButton *button, gpointer data) {
 
 
     if(g_date_time_compare(selected_date, date_now) == -1) {
-        if (!sent_wrong_date_alert) {
+        if (!ui_states->sent_wrong_date_alert) {
             gtk_box_insert_child_after(GTK_BOX(popover_box), warning_label, params->popover_sub_box);
             callback_params.popover_box = popover_box;
             callback_params.warning_label = warning_label;
+            callback_params.ui_states = ui_states;
             g_signal_connect(params->popover, "closed", G_CALLBACK(rest_wrong_date_alert), &callback_params);
 
-            sent_wrong_date_alert = true;
+            ui_states->sent_wrong_date_alert = 1;
         }
     } else {
 
@@ -389,7 +392,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
-    is_add_task_active = !is_add_task_active;
+    cancel_params->add_task_params->ui_states->is_add_task_active = 0;
 
     gtk_widget_set_sensitive(existing_task, true);
     while(gtk_widget_get_next_sibling(existing_task)!=NULL) {
@@ -400,8 +403,6 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), cancel_params->add_task_params);
 }
 void add_new_task(GtkWidget *button, gpointer data) {
-    if(is_add_task_active) return;
-
     struct AddNewTaskParams *add_new_task_params = data;
     GtkWidget *tasks_box = add_new_task_params->tasks_box;
     GtkWidget *right_box = gtk_widget_get_parent(tasks_box);
@@ -419,6 +420,9 @@ void add_new_task(GtkWidget *button, gpointer data) {
     static struct TaskDataParams params;
     static struct HandleDate date_params;
     static struct CancelAddingNewTaskParams cancel_params;
+    struct UIStates *ui_states = add_new_task_params->ui_states;
+
+    if(ui_states->is_add_task_active==1) return;
 
     cancel_params.edit_mode = 0;
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "X");
@@ -482,6 +486,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     params.floating_add_button = floating_add_button;
     params.string_date = 0;
     params.unix_datetime = 0;
+    params.ui_states = ui_states;
 
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
     gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
@@ -497,7 +502,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
 
     if(strcmp(gtk_widget_get_name(button), "edit_button")!=0) gtk_box_prepend(GTK_BOX(right_box), fields_box);
-    is_add_task_active= !is_add_task_active;
+    ui_states->is_add_task_active = 1;
 
     popover_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     calendar = gtk_calendar_new();
@@ -526,6 +531,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     date_params.params = &params;
     date_params.desc_entry = task_desc_entry;
     date_params.add_date_button = add_date_button;
+    date_params.ui_states = ui_states;
 
     cancel_params.add_task_box = fields_box;
     cancel_params.floating_add_button = floating_add_button;
