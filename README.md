@@ -67,7 +67,7 @@ ArchLinux:
 > sudo pacman -S sqlite gtk4 make gcc
 
 Debian:
-> sudo apt install sqlite3 gtk4 make gcc
+> sudo apt install libsqlite3-dev libgtk-4-dev make gcc
 
 Po zainstalowaniu odpowiednich zależności należy uruchomić komendę make w głównym folderze projektu. Plik binarny znajduje się w folderze bin. Uruchomienie tego pliku bez żadnych argumentów, wystartuje graficzną wersję aplikacji. Podanie argumentów skutkuje uruchomieniem wersji cli programu:
 
