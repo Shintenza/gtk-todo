@@ -83,7 +83,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
     g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
-    load_tasks_from_db(db, tasks_box, "normal", 0);
+    load_tasks_from_db(db, tasks_box, "normal", 0, ui_states);
 
     gtk_window_present (GTK_WINDOW (window));
 }

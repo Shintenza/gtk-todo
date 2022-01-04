@@ -5,6 +5,7 @@
 
 int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name) {
     struct LoadTasksFromDbParams *load_tasks_from_db_args = args;
+    struct UIStates *ui_states = load_tasks_from_db_args->ui_states;
     GtkWidget *tasks_box = load_tasks_from_db_args->tasks_box;
     int id = strtol(argv[0], NULL, 10);
     int importance = strtol(argv[5], NULL, 10);
@@ -16,10 +17,11 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.db = load_tasks_from_db_args->db;
     new_task_box_params.finished = load_tasks_from_db_args->finished;
     new_task_box_params.importance = importance;
+    new_task_box_params.ui_states = ui_states;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };
-void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importance, int finished) {
+void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importance, int finished, struct UIStates *ui_states) {
     char *sql;
     int rc;
     sqlite3 *db = given_db;
@@ -40,6 +42,7 @@ void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importan
     load_tasks_from_db_callback_args.tasks_box = tasks_box;
     load_tasks_from_db_callback_args.db= db;
     load_tasks_from_db_callback_args.finished = finished;
+    load_tasks_from_db_callback_args.ui_states = ui_states;
 
     rc = sqlite3_exec(db, sql, load_tasks_from_db_callback, &load_tasks_from_db_callback_args, &err_msg);
     if (rc != SQLITE_OK ) {
@@ -52,9 +55,9 @@ void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importan
 }
 void load_archived_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 1);
+    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 1, load_tasks_params->ui_states);
 }
 void load_active_tasks(GtkWidget *button, gpointer user_data) {
     struct LoadTasksFromDbParams *load_tasks_params = user_data;
-    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 0);
+    load_tasks_from_db(load_tasks_params->db, load_tasks_params->tasks_box, "normal", 0, load_tasks_params->ui_states);
 }

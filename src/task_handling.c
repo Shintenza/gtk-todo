@@ -2,8 +2,6 @@
 #include "include/structs.h"
 #include "include/task_handling.h"
 
-bool appended_inform_label = false;
-
 void task_move(GtkWidget *button, gpointer data) {
     struct MoveTaskParams *move_task_params = data;
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
@@ -112,6 +110,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *name_and_important_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkStyleContext *context;
     static struct MoveTaskParams move_task_params;
+    struct UIStates *ui_states = params->ui_states;
 
     sprintf(string_id, "%d", id);
 
@@ -169,10 +168,11 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_box_append(GTK_BOX(tasks_box), single_task_box);  
     
     params->date_string = 0;
-    appended_inform_label = false;
+    ui_states->appended_inform_label = 0;
     static struct AddNewTaskParams add_params;
     add_params.tasks_box = tasks_box;
     add_params.db = params->db;
+    add_params.ui_states = ui_states;
     g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db);
     g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db);
     g_signal_connect(edit_button, "clicked", G_CALLBACK(add_new_task), &add_params);
@@ -231,6 +231,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         fn_params.finished = 0;
         fn_params.date_string = add_task_params->string_date;
         fn_params.db = db;
+        fn_params.ui_states = ui_states;
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
@@ -353,11 +354,11 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(inform_label));
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(time_label));
         
-        if (!appended_inform_label) {
+        if (!ui_states->appended_inform_label) {
             gtk_box_insert_child_after(GTK_BOX(params->add_task_box), date_box, params->desc_entry);
             params->params->date_label = date_label;
             params->params->time_label = time_label;
-            appended_inform_label = true;
+            ui_states->appended_inform_label = 1;
         } else {
             gtk_label_set_label(GTK_LABEL(params->params->date_label), date_string);
             gtk_label_set_label(GTK_LABEL(params->params->time_label), time_string);

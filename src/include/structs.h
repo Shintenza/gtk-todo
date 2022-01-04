@@ -48,6 +48,7 @@ struct CreateNewTaskBoxParams {
     int importance;
     int *id;
     int finished;
+    struct UIStates *ui_states;
 };
 struct HandleDate {
     GtkWidget *popover;
@@ -77,6 +78,7 @@ struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
     sqlite3 *db;
     int finished;
+    struct UIStates *ui_states;
 };
 struct ToggleTaskImportance {
     sqlite3 *db;
