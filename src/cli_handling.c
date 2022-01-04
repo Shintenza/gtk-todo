@@ -1,7 +1,5 @@
 #include "include/structs.h"
 #include "include/messages.h"
-#include <stdio.h>
-#include <time.h>
 #define MAX_ENTRIES 1000
 #define MAX_NAME_LENGTH 125
 #define MAX_DESC_LENGTH 2000
@@ -231,14 +229,7 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     char *error;
     int day, month, year, hours, minutes;
     int i;
-    struct tm {
-        int tm_sec;
-        int tm_min;
-        int tm_hour;
-        int tm_mday;
-        int tm_mon;
-        int tm_year;
-    } time;
+    struct tm time;
     time_t epoch;
     char *sql = malloc(MAX_NAME_LENGTH+MAX_DESC_LENGTH+17+15);
     char *db_error_msg = 0;

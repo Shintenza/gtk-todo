@@ -448,7 +448,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *desc_label = gtk_widget_get_next_sibling(date_label);
         const char *task_name = gtk_label_get_text(GTK_LABEL(name_label));
         const char *task_desc = gtk_label_get_text(GTK_LABEL(desc_label));
-        const char *task_date = gtk_label_get_text(GTK_LABEL(desc_label));
+        /* const char *task_date = gtk_label_get_text(GTK_LABEL(desc_label)); */
 
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, false);
