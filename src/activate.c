@@ -54,6 +54,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     add_new_task_parms.ui_states = ui_states;
     load_tasks_params.tasks_box = tasks_box;
     load_tasks_params.db = db;
+    load_tasks_params.ui_states = ui_states;
     
     button = gtk_button_new_with_label("Aktywne");
     gtk_box_append(GTK_BOX(side_menu), button);

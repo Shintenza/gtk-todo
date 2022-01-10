@@ -18,6 +18,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     new_task_box_params.finished = load_tasks_from_db_args->finished;
     new_task_box_params.importance = importance;
     new_task_box_params.ui_states = ui_states;
+    new_task_box_params.mode = 0;
     create_new_task_box(&new_task_box_params, id);
     return 0;
 };

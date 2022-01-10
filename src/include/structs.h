@@ -37,6 +37,7 @@ struct CancelAddingNewTaskParams {
     GtkWidget *add_task_box;
     GtkWidget *tasks_box;
     int edit_mode;
+    gint handler_id;
     struct AddNewTaskParams *add_task_params;
 };
 struct CreateNewTaskBoxParams {
@@ -48,6 +49,7 @@ struct CreateNewTaskBoxParams {
     int importance;
     int *id;
     int finished;
+    int mode;
     struct UIStates *ui_states;
 };
 struct HandleDate {
