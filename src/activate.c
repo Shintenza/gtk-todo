@@ -3,6 +3,35 @@
 #include "include/task_handling.h"
 #include "include/task_loading.h"
 
+void handle_floating_button (GtkWidget *button, gpointer data) {
+    struct AddNewTaskParams *a = data;
+    struct CancelAddingNewTaskParams cancel_params;
+    GtkWidget *tmp_c = gtk_widget_get_first_child(a->tasks_box);
+    const char *name;
+
+    if (a->ui_states->is_add_task_active == 0 ) {
+        add_new_task(button, a);
+    } else {
+        cancel_params.add_task_params = a;
+        cancel_params.tasks_box = a->tasks_box;
+        cancel_params.edit_mode = a->ui_states->edit_mode;
+        cancel_params.floating_add_button = button;
+        if (a->ui_states->edit_mode > 0) {
+            do {
+                name = gtk_widget_get_name(tmp_c);
+                if(name[0]=='e') {
+                    gtk_box_append(GTK_BOX(tmp_c), tmp_c);
+                    cancel_params.add_task_box = gtk_widget_get_last_child(tmp_c);
+                    break;
+                }
+            } while((tmp_c = gtk_widget_get_next_sibling(tmp_c))!=NULL);
+            a->ui_states->edit_mode = 0;
+        } else {
+            cancel_params.add_task_box = gtk_widget_get_first_child(gtk_widget_get_parent(a->tasks_box));
+        }
+        cancel_adding_new_task(button, &cancel_params);
+    }
+}
 void activate(GtkApplication *app, gpointer user_data) {
     struct ActivateParams *activate_params = user_data;
     GtkWidget *window = gtk_application_window_new(app);
@@ -83,7 +112,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_margin_end(floating_add_button, 20);
 
     g_signal_connect(add_task_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
-    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_parms);
+    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(handle_floating_button), &add_new_task_parms);
     load_tasks_from_db(db, tasks_box, "normal", 0, ui_states);
 
     gtk_window_present (GTK_WINDOW (window));

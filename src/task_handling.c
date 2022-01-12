@@ -400,8 +400,6 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
         existing_task = gtk_widget_get_next_sibling(existing_task);
         gtk_widget_set_sensitive(existing_task, true);
     }
-
-    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(add_new_task), cancel_params->add_task_params);
 }
 void add_new_task(GtkWidget *button, gpointer data) {
     struct AddNewTaskParams *add_new_task_params = data;
@@ -420,12 +418,10 @@ void add_new_task(GtkWidget *button, gpointer data) {
     sqlite3 *db = add_new_task_params->db;
     static struct TaskDataParams params;
     static struct HandleDate date_params;
-    static struct CancelAddingNewTaskParams cancel_params;
     struct UIStates *ui_states = add_new_task_params->ui_states;
 
     if(ui_states->is_add_task_active==1) return;
 
-    cancel_params.edit_mode = 0;
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "X");
     gtk_widget_set_name(floating_add_button, "f_add_button_red");
 
@@ -438,6 +434,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
     if(strcmp(gtk_widget_get_name(button), "edit_button")==0) {
         existing_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
+
         char temp_name[100];
         sprintf(temp_name, "e%s", gtk_widget_get_name(existing_box));
         gtk_widget_set_name(existing_box, temp_name);
@@ -459,9 +456,11 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_widget_set_visible(child, false);
         gtk_entry_buffer_set_text(task_name_buffer, task_name, strlen(task_name));
         gtk_entry_buffer_set_text(task_desc_buffer, task_desc, strlen(task_desc));
+
         gtk_box_append(GTK_BOX(existing_box), fields_box);
+
         label = gtk_label_new("Edytowanie zadania");
-        cancel_params.edit_mode = 1;
+        add_new_task_params->ui_states->edit_mode=1;
     } else {
         label = gtk_label_new("Dodaj nowe zadanie");
     }
@@ -534,12 +533,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
     date_params.add_date_button = add_date_button;
     date_params.ui_states = ui_states;
 
-    cancel_params.add_task_box = fields_box;
-    cancel_params.floating_add_button = floating_add_button;
-    cancel_params.add_task_params = add_new_task_params;
-    cancel_params.tasks_box = tasks_box;
-
     g_signal_connect(btn, "clicked", G_CALLBACK(date_handler), &date_params);
     g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &params);
-    g_signal_connect(floating_add_button, "clicked", G_CALLBACK(cancel_adding_new_task), &cancel_params);
 }

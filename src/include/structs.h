@@ -7,6 +7,7 @@ struct UIStates {
     int is_add_task_active;
     int sent_wrong_date_alert; 
     int appended_inform_label;
+    int edit_mode;
 };
 struct ActivateParams {
     sqlite3 *db;
