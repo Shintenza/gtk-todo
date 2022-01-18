@@ -1,5 +1,7 @@
 #include "include/structs.h"
-#include "include/messages.h"
+#include "include/utils_h/messages.h"
+#include "include/utils_h/db_error.h"
+
 #define MAX_ENTRIES 1000
 #define MAX_NAME_LENGTH 125
 #define MAX_DESC_LENGTH 2000
@@ -49,6 +51,7 @@ int check_if_flag_exists(int argc, char **argv, char *flag) {
     }
     return 0;
 }
+
 void tasks_arr_length (struct CliTask *tasks_arr, int *tasks_array_len, int *first_finished_task) {
     int found = 0; 
     while (*tasks_array_len<MAX_ENTRIES && tasks_arr[*tasks_array_len].unix_time!=0){
@@ -126,12 +129,9 @@ void delete_handling (int argc, char **argv, int tasks_array_len, int first_fini
                 sprintf(sql, "DELETE FROM tasks WHERE rowid=%d", tasks_arr[i].rowid);
                 rc = sqlite3_exec(db, sql, NULL, NULL, &db_error_msg);
                 if (rc!=SQLITE_OK) {
-                    fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-                    sqlite3_free(db_error_msg);
-                    sqlite3_close(db);
                     free(sql);
                     free(return_message);
-                    return;
+                    db_error_handling(&db, &db_error_msg);
                 }
             }
             sprintf(return_message, "Pomyślnie usunięto zadanie: %s z bazy danych!\n", tasks_arr[i].name);
@@ -191,12 +191,9 @@ void delete_handling (int argc, char **argv, int tasks_array_len, int first_fini
 
     rc = sqlite3_exec(db, sql, NULL, NULL, &db_error_msg);
     if (rc!=SQLITE_OK) {
-        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-        sqlite3_free(db_error_msg);
-        sqlite3_close(db);
         free(sql);
         free(return_message);
-        return;
+        db_error_handling(&db, &db_error_msg);
     }
     free(sql);
     free(return_message);
@@ -212,10 +209,7 @@ void init_load(sqlite3 *db, struct CliTask *tasks_arr, int *entries_counter) {
     params.entries_counter = entries_counter;
     rc = sqlite3_exec(db, sql, cli_load_tasks_callback, &params, &db_error_msg);
     if (rc!=SQLITE_OK) {
-        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-        sqlite3_free(db_error_msg);
-        sqlite3_close(db);
-        return;
+        db_error_handling(&db, &db_error_msg);
     }
 }
 void adding_handling (int argc, char **argv, sqlite3 *db){
@@ -294,33 +288,30 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     } 
     time.tm_mday = day; time.tm_mon = month; time.tm_year = year; time.tm_hour = hours; time.tm_min = minutes; time.tm_sec = 0;
 
-    /* ???Why??? */
     epoch = mktime(&time);
     sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, task_date, epoch);
     rc = sqlite3_exec(db, sql, NULL, NULL, &db_error_msg);
     if (rc!=SQLITE_OK) {
-        fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-        sqlite3_free(db_error_msg);
-        sqlite3_close(db);
         free(sql);
-        return;
+        db_error_handling(&db, &db_error_msg);
     }
     printf("Pomyślnie dodano nowe zadanie!!!\n");
     free(sql);
 }
-
+/* core of cli */
 int cli_handling (int argc, char **argv, sqlite3 *given_db) {
     sqlite3 *db = given_db;
     char *main_flag = argv[1];
     int entries_counter = 0;
     int tasks_array_len = 0;
     int first_finished_task = 0;
+
     struct CliTask tasks_arr[MAX_ENTRIES] = {{0}};
 
     init_load(db, tasks_arr, &entries_counter);
     tasks_arr_length(tasks_arr, &tasks_array_len, &first_finished_task);
 
-    if (strcmp(main_flag, "--help") ==0 || strcmp(main_flag, "-h")==0) {
+    if (strcmp(main_flag, "--help") == 0 || strcmp(main_flag, "-h")==0) {
         printf("%s", help_message());
     } else if(strcmp(main_flag, "-L")==0 || strcmp(main_flag, "-l")==0) {
         listing_handling(&entries_counter, tasks_arr, argc, argv, &tasks_array_len, &first_finished_task);
@@ -330,6 +321,7 @@ int cli_handling (int argc, char **argv, sqlite3 *given_db) {
         adding_handling(argc, argv, db);
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
+        exit(1);
     }
-    return 1;
+    exit(0);
 }

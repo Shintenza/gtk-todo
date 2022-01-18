@@ -43,9 +43,14 @@ void activate(GtkApplication *app, gpointer user_data) {
     GdkDisplay *display = gdk_display_get_default();
     sqlite3 *db = activate_params->db;
     struct UIStates *ui_states = activate_params->ui_states;
+    GtkWidget *introducton = gtk_label_new("SIEMAAAA");
 
     static struct AddNewTaskParams add_new_task_parms;
     static struct LoadTasksFromDbParams load_tasks_params;
+
+    gtk_widget_set_hexpand(introducton, TRUE);
+    gtk_widget_set_vexpand(introducton, TRUE);
+    gtk_widget_set_name(introducton, "intro");
 
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "./style.css");
@@ -58,8 +63,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(header_bar), true);
     gtk_widget_set_name(GTK_WIDGET(header_bar), "header");
-    gtk_box_append(GTK_BOX(vbox), header_bar);
-    add_task_button = gtk_button_new_with_label("Dodaj nowe zadanie");
+    gtk_box_append(GTK_BOX(vbox), header_bar); add_task_button = gtk_button_new_with_label("Dodaj nowe zadanie");
     gtk_header_bar_pack_start(GTK_HEADER_BAR(header_bar), add_task_button);
 
     main_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
@@ -104,6 +108,11 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_box_append(GTK_BOX(main_box), overlay);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), scrolled_window);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), right_box);
+
+    if (ui_states->first_launch) {
+        gtk_box_append(GTK_BOX(right_box), introducton);
+    }
+
     gtk_box_append(GTK_BOX(right_box), tasks_box);
     gtk_overlay_add_overlay(GTK_OVERLAY(overlay), floating_add_button);
     gtk_widget_set_halign(floating_add_button, GTK_ALIGN_END);

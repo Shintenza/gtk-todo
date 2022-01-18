@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall
 SRC = src
 OBJ = obj
-SRCS = $(wildcard $(SRC)/*.c)
+SRCS = $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/utils/*.c)
 OBJS = $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 HEADERS = $(wildcard $(SRC)/include/*.h)
 LDFLAGS = -lsqlite3 `pkg-config --cflags --libs gtk4`
@@ -15,7 +15,7 @@ $(BIN): $(OBJS) | structure
 $(OBJ)/%.o: $(SRC)/%.c $(HEADERS) | structure
 	$(CC) $(CFLAGS) -c $< -o $@	$(LDFLAGS)
 structure:
-	mkdir -p $(OBJ) $(BIN_DIR)
+	mkdir -p $(OBJ)/utils $(BIN_DIR)
 
 clean:
 	rm -rf $(BIN_DIR)/* $(OBJ)/*

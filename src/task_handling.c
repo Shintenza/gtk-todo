@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include "include/structs.h"
 #include "include/task_handling.h"
+#include "include/utils_h/db_error.h"
 
 void task_move(GtkWidget *button, gpointer data) {
     struct MoveTaskParams *move_task_params = data;
@@ -23,24 +24,18 @@ void task_move(GtkWidget *button, gpointer data) {
         default:
             sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
     }
+
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-    if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Operation failed\n");
-        fprintf(stderr, "SQL error: %s\n", err_msg);
 
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        return;
-    }
+    if (rc != SQLITE_OK )     
+        db_error_handling(&db, &err_msg);
     free(sql);
 }
 
 void task_remove(GtkWidget *button, gpointer data) {
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
-    GtkWidget *inform_label = gtk_label_new("Pomyślnie usunięto zadanie");
-    GtkWidget *scrolled_window = gtk_widget_get_parent(gtk_widget_get_parent(gtk_widget_get_parent(tasks_box)));
 
     sqlite3 *db = data;
     int rc;
@@ -50,14 +45,9 @@ void task_remove(GtkWidget *button, gpointer data) {
 
     sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-    if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Operation failed\n");
-        fprintf(stderr, "SQL error: %s\n", err_msg);
+    if (rc != SQLITE_OK )
+        db_error_handling(&db, &err_msg);
 
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        exit(1);
-    }
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     free(sql);
 }
@@ -89,14 +79,8 @@ void toggle_task_importance (GtkWidget *button, gpointer data) {
     }
 
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-    if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Operation failed\n");
-        fprintf(stderr, "SQL error: %s\n", err_msg);
-
-        sqlite3_free(err_msg);
-        sqlite3_close(db);
-        exit(1);
-    }
+    if (rc != SQLITE_OK ) 
+        db_error_handling(&db, &err_msg);
     return; 
 }
 void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
@@ -119,8 +103,10 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *edit_button = gtk_button_new_with_label("");
     GtkWidget *name_and_important_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkStyleContext *context;
-    static struct MoveTaskParams move_task_params;
+
+    static struct MoveTaskParams move_task_data;
     struct UIStates *ui_states = params->ui_states;
+    static struct AddNewTaskParams add_new_task_data;
 
     sprintf(string_id, "%d", id);
 
@@ -130,17 +116,17 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     sprintf(date_string_label, "Zaplanowano na: %s", date_string);
     task_date_label=gtk_label_new(date_string_label);
     
-    move_task_params.db = params->db;
-    move_task_params.tasks_box = params->tasks_box;
+    move_task_data.db = params->db;
+    move_task_data.tasks_box = params->tasks_box;
 
     if (finished == 0) {
-        move_task_params.operation = 1;
+        move_task_data.operation = 1;
         task_done_button = gtk_button_new_with_label("Ukończone");
-        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_params);
+        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_data);
     } else {
-        move_task_params.operation = 2;
+        move_task_data.operation = 2;
         task_done_button = gtk_button_new_with_label("Przywróć");
-        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_params);
+        g_signal_connect(task_done_button, "clicked", G_CALLBACK(task_move), &move_task_data);
     } 
     
     gtk_widget_set_name(task_remove_button, "task_remove_button");
@@ -181,14 +167,12 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     
     params->date_string = 0;
     ui_states->appended_inform_label = 0;
-    static struct AddNewTaskParams add_params;
-    add_params.tasks_box = tasks_box;
-    add_params.db = params->db;
-    add_params.ui_states = ui_states;
+
+    add_new_task_data.tasks_box = tasks_box; add_new_task_data.db = params->db; add_new_task_data.ui_states = ui_states;
 
     g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db);
     g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db);
-    g_signal_connect(edit_button, "clicked", G_CALLBACK(add_new_task), &add_params);
+    g_signal_connect(edit_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_data);
 }
 void data_handler(GtkWidget *button, gpointer data) {
     struct TaskDataParams *add_task_params = data; 
@@ -206,7 +190,6 @@ void data_handler(GtkWidget *button, gpointer data) {
     const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
     sqlite3 *db = add_task_params->db;
     struct UIStates *ui_states = add_task_params->ui_states;
-    /*TODO pass proper amount of bytes*/
     char *sql = malloc(10000);
     int rc = 0;
     char *err_msg;
@@ -236,14 +219,14 @@ void data_handler(GtkWidget *button, gpointer data) {
     } else {
         int element_id = sqlite3_last_insert_rowid(db) + 1;
 
-        static struct CreateNewTaskBoxParams fn_params;
-        fn_params.tasks_box = tasks_box;
-        fn_params.task_name = task_name;
-        fn_params.task_desc = task_desc;
-        fn_params.finished = 0;
-        fn_params.date_string = add_task_params->string_date;
-        fn_params.db = db;
-        fn_params.ui_states = ui_states;
+        static struct CreateNewTaskBoxParams cnt_box_data;
+        cnt_box_data.tasks_box = tasks_box;
+        cnt_box_data.task_name = task_name;
+        cnt_box_data.task_desc = task_desc;
+        cnt_box_data.finished = 0;
+        cnt_box_data.date_string = add_task_params->string_date;
+        cnt_box_data.db = db;
+        cnt_box_data.ui_states = ui_states;
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
@@ -270,7 +253,7 @@ void data_handler(GtkWidget *button, gpointer data) {
             sprintf(sql, "UPDATE tasks SET task_name = '%s', task_desc = '%s', date_string = '%s', date = '%ld' WHERE rowid = %s",\
                     task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime, rowid);
         } else {
-            create_new_task_box(&fn_params, element_id);
+            create_new_task_box(&cnt_box_data, element_id);
             sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime);
         }
         ui_states->is_add_task_active = 0;
@@ -289,15 +272,14 @@ void data_handler(GtkWidget *button, gpointer data) {
         gtk_widget_set_name(floating_add_button, "f_add_button");
 
         free(sql);
-        if( rc != SQLITE_OK ) {
-            fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
-            sqlite3_close(db);
-        }
+
+        if (rc!=SQLITE_OK)
+            db_error_handling(&db, &err_msg);
     }
 }
 void date_handler (GtkMenuButton *button, gpointer data) {
     struct HandleDate *params = data;
-    static struct ResetWrongDateAlertBoxParams callback_params;
+    static struct ResetWrongDateAlertBoxParams callback_data;
     struct UIStates *ui_states = params->ui_states;
 
     GDateTime *date = gtk_calendar_get_date(GTK_CALENDAR(params->calendar));
@@ -331,10 +313,10 @@ void date_handler (GtkMenuButton *button, gpointer data) {
     if(g_date_time_compare(selected_date, date_now) == -1) {
         if (!ui_states->sent_wrong_date_alert) {
             gtk_box_insert_child_after(GTK_BOX(popover_box), warning_label, params->popover_sub_box);
-            callback_params.popover_box = popover_box;
-            callback_params.warning_label = warning_label;
-            callback_params.ui_states = ui_states;
-            g_signal_connect(params->popover, "closed", G_CALLBACK(rest_wrong_date_alert), &callback_params);
+            callback_data.popover_box = popover_box;
+            callback_data.warning_label = warning_label;
+            callback_data.ui_states = ui_states;
+            g_signal_connect(params->popover, "closed", G_CALLBACK(rest_wrong_date_alert), &callback_data);
 
             ui_states->sent_wrong_date_alert = 1;
         }
@@ -388,6 +370,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     GtkWidget *add_task_box_parent = gtk_widget_get_parent(add_task_box);
     GtkWidget *existing_task = gtk_widget_get_first_child(cancel_params->tasks_box);
     GtkWidget *child = gtk_widget_get_first_child(add_task_box_parent);
+    
     if (cancel_params->edit_mode>0) {
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, true);
@@ -395,7 +378,6 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
         }
         char rowid[100];
         sprintf(rowid, "%s", gtk_widget_get_name(add_task_box_parent));
-        /*removes first letter from char array*/
         memmove(rowid, rowid+1, strlen(rowid));
         gtk_widget_set_name(add_task_box_parent, rowid);
         gtk_widget_set_visible(gtk_widget_get_parent(button), true);
@@ -426,8 +408,8 @@ void add_new_task(GtkWidget *button, gpointer data) {
     GtkWidget *existing_box;
     GtkEntryBuffer *task_name_buffer = gtk_entry_buffer_new(NULL, 0) , *task_desc_buffer = gtk_entry_buffer_new(NULL, 0);
     sqlite3 *db = add_new_task_params->db;
-    static struct TaskDataParams params;
-    static struct HandleDate date_params;
+    static struct TaskDataParams task_data;
+    static struct HandleDate date_args;
     struct UIStates *ui_states = add_new_task_params->ui_states;
 
     if(ui_states->is_add_task_active==1) return;
@@ -486,17 +468,17 @@ void add_new_task(GtkWidget *button, gpointer data) {
     
 
     add_button = gtk_button_new_with_label("Dodaj");
-    params.task_name_buffer = task_name_buffer;
-    params.task_desc_buffer = task_desc_buffer;
-    params.window = window;
-    params.tasks_box = tasks_box;
-    params.add_task_box = fields_box;
-    params.db = db;
-    params.right_box = right_box;
-    params.floating_add_button = floating_add_button;
-    params.string_date = 0;
-    params.unix_datetime = 0;
-    params.ui_states = ui_states;
+    task_data.task_name_buffer = task_name_buffer;
+    task_data.task_desc_buffer = task_desc_buffer;
+    task_data.window = window;
+    task_data.tasks_box = tasks_box;
+    task_data.add_task_box = fields_box;
+    task_data.db = db;
+    task_data.right_box = right_box;
+    task_data.floating_add_button = floating_add_button;
+    task_data.string_date = 0;
+    task_data.unix_datetime = 0;
+    task_data.ui_states = ui_states;
 
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
     gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
@@ -530,18 +512,18 @@ void add_new_task(GtkWidget *button, gpointer data) {
     gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(popover_sub_box));
     gtk_box_append(GTK_BOX(popover_box), GTK_WIDGET(btn));
 
-    date_params.add_task_box = fields_box;
-    date_params.calendar = calendar;
-    date_params.hour_input = spin_button_hour;
-    date_params.min_input = spin_button_min;
-    date_params.popover_box = popover_box;
-    date_params.popover_sub_box = popover_sub_box;
-    date_params.popover = popover;
-    date_params.params = &params;
-    date_params.desc_entry = task_desc_entry;
-    date_params.add_date_button = add_date_button;
-    date_params.ui_states = ui_states;
+    date_args.add_task_box = fields_box;
+    date_args.calendar = calendar;
+    date_args.hour_input = spin_button_hour;
+    date_args.min_input = spin_button_min;
+    date_args.popover_box = popover_box;
+    date_args.popover_sub_box = popover_sub_box;
+    date_args.popover = popover;
+    date_args.params = &task_data;
+    date_args.desc_entry = task_desc_entry;
+    date_args.add_date_button = add_date_button;
+    date_args.ui_states = ui_states;
 
-    g_signal_connect(btn, "clicked", G_CALLBACK(date_handler), &date_params);
-    g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &params);
+    g_signal_connect(btn, "clicked", G_CALLBACK(date_handler), &date_args);
+    g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &task_data);
 }

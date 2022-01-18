@@ -8,6 +8,7 @@ struct UIStates {
     int sent_wrong_date_alert; 
     int appended_inform_label;
     int edit_mode;
+    int first_launch;
 };
 struct ActivateParams {
     sqlite3 *db;

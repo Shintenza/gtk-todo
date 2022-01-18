@@ -6,23 +6,29 @@
 #include "include/activate.h"
 #include "include/db_init.h"
 #include "include/cli_handling.h"
+#include "include/utils_h/first_time_launch.h"
 
 int main(int argc, char **argv) {
     sqlite3 *db;
     GtkApplication *app;
     int status;
     int cli_response = 0;
-    struct UIStates ui_states = { 0, 0, 0, 0 };
-    db_init(&db);
-    struct ActivateParams activate_params = { db, &ui_states };
 
+    /* UIStates elements is_add_task_active, sent_wrong_date_alert, appended_inform_label, edit_mode, first_launch */
+    struct UIStates ui_states = { 0, 0, 0, 0 };
+    struct ActivateParams activate_params = { NULL, &ui_states }; 
+    
+    /*db initialization*/
+    db_init(&db);
+    activate_params.db = db;
+
+    ui_states.first_launch = first_time_launch(db) ? 1 : 0;
+
+    /*running cli version of the program*/
     if (argc >= 2) {
         cli_response = cli_handling(argc, argv, db);
     }
-    
-    if (cli_response > 0) {
-        return 0;
-    }
+
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_FLAGS_NONE);
     g_signal_connect (app, "activate", G_CALLBACK (activate), &activate_params);
     status = g_application_run (G_APPLICATION (app), 0, NULL);
