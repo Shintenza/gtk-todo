@@ -2,6 +2,7 @@
 #include "include/structs.h"
 #include "include/task_handling.h"
 #include "include/utils_h/db_error.h"
+#include "include/utils_h/first_time_launch.h"
 
 void task_move(GtkWidget *button, gpointer data) {
     struct MoveTaskParams *move_task_params = data;
@@ -27,7 +28,9 @@ void task_move(GtkWidget *button, gpointer data) {
 
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
-
+    if (gtk_widget_get_first_child(tasks_box)==NULL) {
+       first_time_launch(tasks_box, operation== 1 ? 1 : 0);
+    }
     if (rc != SQLITE_OK )     
         db_error_handling(&db, &err_msg);
     free(sql);
@@ -50,7 +53,11 @@ void task_remove(GtkWidget *button, gpointer data) {
 
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     free(sql);
+    if (gtk_widget_get_first_child(tasks_box)==NULL) {
+        first_time_launch(tasks_box, 1);
+    }
 }
+
 void rest_wrong_date_alert(GtkPopover *popover, gpointer data) {
     struct ResetWrongDateAlertBoxParams *params = data;
     struct UIStates *ui_states = params->ui_states;
@@ -118,6 +125,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     
     move_task_data.db = params->db;
     move_task_data.tasks_box = params->tasks_box;
+    move_task_data.ui_states = ui_states;
 
     if (finished == 0) {
         move_task_data.operation = 1;
@@ -153,6 +161,10 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_hexpand(task_name_label, TRUE);
     gtk_widget_set_hexpand(name_and_important_box, TRUE);
 
+    if(ui_states->first_launch==1) {
+        ui_states->first_launch = 0;
+        destroy_welcome_msg(tasks_box);
+    }
 
     gtk_box_append(GTK_BOX(single_task_box), name_and_important_box);
     gtk_box_append(GTK_BOX(single_task_box), task_date_label);
@@ -370,7 +382,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     GtkWidget *add_task_box_parent = gtk_widget_get_parent(add_task_box);
     GtkWidget *existing_task = gtk_widget_get_first_child(cancel_params->tasks_box);
     GtkWidget *child = gtk_widget_get_first_child(add_task_box_parent);
-    
+
     if (cancel_params->edit_mode>0) {
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, true);
@@ -382,6 +394,11 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
         gtk_widget_set_name(add_task_box_parent, rowid);
         gtk_widget_set_visible(gtk_widget_get_parent(button), true);
     }
+
+    if (cancel_params->ui_states->first_launch==1) {
+        hide_unhide_welcome_msg(cancel_params->tasks_box, 0);
+    }
+
     gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
@@ -523,6 +540,10 @@ void add_new_task(GtkWidget *button, gpointer data) {
     date_args.desc_entry = task_desc_entry;
     date_args.add_date_button = add_date_button;
     date_args.ui_states = ui_states;
+
+    if (ui_states->first_launch) {
+       hide_unhide_welcome_msg(tasks_box, 1);
+    }
 
     g_signal_connect(btn, "clicked", G_CALLBACK(date_handler), &date_args);
     g_signal_connect(add_button, "clicked", G_CALLBACK(data_handler), &task_data);

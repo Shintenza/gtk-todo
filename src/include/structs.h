@@ -39,6 +39,7 @@ struct CancelAddingNewTaskParams {
     GtkWidget *add_task_box;
     GtkWidget *tasks_box;
     int edit_mode;
+    struct UIStates *ui_states;
     gint handler_id;
     struct AddNewTaskParams *add_task_params;
 };
@@ -77,11 +78,13 @@ struct MoveTaskParams {
     sqlite3 *db;
     GtkWidget *tasks_box;
     int operation;
+    struct UIStates *ui_states;
 };
 struct LoadTasksFromDbParams {
     GtkWidget *tasks_box;
     sqlite3 *db;
     int finished;
+    int *tasks_counter;
     struct UIStates *ui_states;
 };
 struct ToggleTaskImportance {

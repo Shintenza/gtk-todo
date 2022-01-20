@@ -22,8 +22,6 @@ int main(int argc, char **argv) {
     db_init(&db);
     activate_params.db = db;
 
-    ui_states.first_launch = first_time_launch(db) ? 1 : 0;
-
     /*running cli version of the program*/
     if (argc >= 2) {
         cli_response = cli_handling(argc, argv, db);

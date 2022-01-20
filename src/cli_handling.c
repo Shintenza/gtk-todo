@@ -21,7 +21,7 @@ struct CliLoadTaskParams {
     int *entries_counter;
 };
 
-static int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_name ) {
+int cli_load_tasks_callback(void *args,int argc, char **argv, char **col_name ) {
     struct CliLoadTaskParams *params = args;
     int *entries_counter = params->entries_counter;
     long long time = strtoll(argv[4], NULL, 10);

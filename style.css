@@ -124,3 +124,7 @@ popover contents {
     padding: 15px;
     border-radius: 5px;
 }
+#welcome_msg{
+    color: white;
+    font-size: 1.5rem;
+}

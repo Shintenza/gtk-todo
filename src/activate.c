@@ -2,6 +2,7 @@
 #include "include/structs.h"
 #include "include/task_handling.h"
 #include "include/task_loading.h"
+#include "include/utils_h/first_time_launch.h"
 
 void handle_floating_button (GtkWidget *button, gpointer data) {
     struct AddNewTaskParams *a = data;
@@ -16,6 +17,7 @@ void handle_floating_button (GtkWidget *button, gpointer data) {
         cancel_params.tasks_box = a->tasks_box;
         cancel_params.edit_mode = a->ui_states->edit_mode;
         cancel_params.floating_add_button = button;
+        cancel_params.ui_states = a->ui_states;
         if (a->ui_states->edit_mode > 0) {
             do {
                 name = gtk_widget_get_name(tmp_c);
@@ -43,15 +45,10 @@ void activate(GtkApplication *app, gpointer user_data) {
     GdkDisplay *display = gdk_display_get_default();
     sqlite3 *db = activate_params->db;
     struct UIStates *ui_states = activate_params->ui_states;
-    GtkWidget *introducton = gtk_label_new("SIEMAAAA");
 
     static struct AddNewTaskParams add_new_task_parms;
     static struct LoadTasksFromDbParams load_tasks_params;
-
-    gtk_widget_set_hexpand(introducton, TRUE);
-    gtk_widget_set_vexpand(introducton, TRUE);
-    gtk_widget_set_name(introducton, "intro");
-
+    
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), "./style.css");
     gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
@@ -77,6 +74,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_hexpand(GTK_WIDGET(right_box), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(right_box), TRUE);
     gtk_widget_set_name(GTK_WIDGET(right_box), "right_box");
+
     tasks_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_widget_set_hexpand(GTK_WIDGET(tasks_box), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
@@ -108,10 +106,6 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_box_append(GTK_BOX(main_box), overlay);
     gtk_overlay_set_child(GTK_OVERLAY(overlay), scrolled_window);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scrolled_window), right_box);
-
-    if (ui_states->first_launch) {
-        gtk_box_append(GTK_BOX(right_box), introducton);
-    }
 
     gtk_box_append(GTK_BOX(right_box), tasks_box);
     gtk_overlay_add_overlay(GTK_OVERLAY(overlay), floating_add_button);
