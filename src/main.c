@@ -12,7 +12,6 @@ int main(int argc, char **argv) {
     sqlite3 *db;
     GtkApplication *app;
     int status;
-    int cli_response = 0;
 
     /* UIStates elements is_add_task_active, sent_wrong_date_alert, appended_inform_label, edit_mode, first_launch */
     struct UIStates ui_states = { 0, 0, 0, 0 };
@@ -24,7 +23,7 @@ int main(int argc, char **argv) {
 
     /*running cli version of the program*/
     if (argc >= 2) {
-        cli_response = cli_handling(argc, argv, db);
+        cli_handling(argc, argv, db);
     }
 
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_FLAGS_NONE);
