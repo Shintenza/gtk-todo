@@ -29,7 +29,7 @@ void task_move(GtkWidget *button, gpointer data) {
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (gtk_widget_get_first_child(tasks_box)==NULL) {
-       first_time_launch(tasks_box, operation== 1 ? 1 : 0);
+       first_time_launch(tasks_box, operation == 1 ? 1 : 0);
     }
     if (rc != SQLITE_OK )     
         db_error_handling(&db, &err_msg);
@@ -383,7 +383,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     GtkWidget *existing_task = gtk_widget_get_first_child(cancel_params->tasks_box);
     GtkWidget *child = gtk_widget_get_first_child(add_task_box_parent);
 
-    if (cancel_params->edit_mode>0) {
+    if (cancel_params->ui_states->edit_mode>0) {
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, true);
             child = gtk_widget_get_next_sibling(child);
@@ -398,7 +398,6 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     if (cancel_params->ui_states->first_launch==1) {
         hide_unhide_welcome_msg(cancel_params->tasks_box, 0);
     }
-
     gtk_box_remove(GTK_BOX(add_task_box_parent), add_task_box);
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
@@ -469,9 +468,11 @@ void add_new_task(GtkWidget *button, gpointer data) {
         gtk_box_append(GTK_BOX(existing_box), fields_box);
 
         label = gtk_label_new("Edytowanie zadania");
+        add_button = gtk_button_new_with_label("Edytuj");
         add_new_task_params->ui_states->edit_mode=1;
     } else {
         label = gtk_label_new("Dodaj nowe zadanie");
+        add_button = gtk_button_new_with_label("Dodaj");
     }
     gtk_widget_set_name(GTK_WIDGET(fields_box), "add_task_box");
     
@@ -484,7 +485,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
     gtk_entry_set_placeholder_text(GTK_ENTRY(task_desc_entry), "Opis zadania");
     
 
-    add_button = gtk_button_new_with_label("Dodaj");
     task_data.task_name_buffer = task_name_buffer;
     task_data.task_desc_buffer = task_desc_buffer;
     task_data.window = window;

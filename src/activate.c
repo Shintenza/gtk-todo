@@ -6,7 +6,7 @@
 
 void handle_floating_button (GtkWidget *button, gpointer data) {
     struct AddNewTaskParams *a = data;
-    struct CancelAddingNewTaskParams cancel_params;
+    static struct CancelAddingNewTaskParams cancel_params;
     GtkWidget *tmp_c = gtk_widget_get_first_child(a->tasks_box);
     const char *name;
 

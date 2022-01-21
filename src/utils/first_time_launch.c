@@ -18,7 +18,7 @@ void first_time_launch (GtkWidget *tasks_box, int mode) {
 }
 void hide_unhide_welcome_msg (GtkWidget *tasks_box, int mode) {
     GtkWidget *welcome_lbl = gtk_widget_get_first_child(tasks_box);
-
+    if (welcome_lbl == NULL) return;
     if (strcmp(gtk_widget_get_name(welcome_lbl), "welcome_msg" )!=0) return;
     if (mode == 1)  {
         gtk_widget_set_visible(welcome_lbl, FALSE);
