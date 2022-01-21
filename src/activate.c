@@ -6,7 +6,7 @@
 
 void handle_floating_button (GtkWidget *button, gpointer data) {
     struct AddNewTaskParams *a = data;
-    static struct CancelAddingNewTaskParams cancel_params;
+    struct CancelAddingNewTaskParams cancel_params;
     GtkWidget *tmp_c = gtk_widget_get_first_child(a->tasks_box);
     const char *name;
 
@@ -18,7 +18,11 @@ void handle_floating_button (GtkWidget *button, gpointer data) {
         cancel_params.edit_mode = a->ui_states->edit_mode;
         cancel_params.floating_add_button = button;
         cancel_params.ui_states = a->ui_states;
-        if (a->ui_states->edit_mode > 0) {
+        
+        printf("EDIT MODE %d\n", a->ui_states->edit_mode);
+        if (a->ui_states->edit_mode == 1) {
+            printf("Hello from handle_floating_button (editing)");
+            exit(1);
             do {
                 name = gtk_widget_get_name(tmp_c);
                 if(name[0]=='e') {
@@ -27,11 +31,13 @@ void handle_floating_button (GtkWidget *button, gpointer data) {
                     break;
                 }
             } while((tmp_c = gtk_widget_get_next_sibling(tmp_c))!=NULL);
+            cancel_adding_new_task(button, &cancel_params);
             a->ui_states->edit_mode = 0;
         } else {
+            printf("Hello from handle_floating_button (not editing)");
             cancel_params.add_task_box = gtk_widget_get_first_child(gtk_widget_get_parent(a->tasks_box));
+            cancel_adding_new_task(button, &cancel_params);
         }
-        cancel_adding_new_task(button, &cancel_params);
     }
 }
 void activate(GtkApplication *app, gpointer user_data) {

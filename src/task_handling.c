@@ -261,6 +261,7 @@ void data_handler(GtkWidget *button, gpointer data) {
                 gtk_widget_set_visible(parent_box_child, true);
                 parent_box_child = gtk_widget_get_next_sibling(parent_box_child);
             }
+            ui_states->edit_mode = 0;
             gtk_widget_set_visible(gtk_widget_get_last_child(parent_box), true);
             sprintf(sql, "UPDATE tasks SET task_name = '%s', task_desc = '%s', date_string = '%s', date = '%ld' WHERE rowid = %s",\
                     task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime, rowid);
@@ -382,7 +383,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     GtkWidget *add_task_box_parent = gtk_widget_get_parent(add_task_box);
     GtkWidget *existing_task = gtk_widget_get_first_child(cancel_params->tasks_box);
     GtkWidget *child = gtk_widget_get_first_child(add_task_box_parent);
-
+    
     if (cancel_params->ui_states->edit_mode>0) {
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, true);
