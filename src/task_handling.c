@@ -4,8 +4,20 @@
 #include "include/utils_h/db_error.h"
 #include "include/utils_h/first_time_launch.h"
 
+struct RemoveTaskArgs {
+    sqlite3 *db;
+    struct UIStates *ui_states;
+};
+
+struct MoveTaskArgs {
+    sqlite3 *db;
+    GtkWidget *tasks_box;
+    int operation;
+    struct UIStates *ui_states;
+};
+
 void task_move(GtkWidget *button, gpointer data) {
-    struct MoveTaskParams *move_task_params = data;
+    struct MoveTaskArgs *move_task_params = data;
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
     int rc;
@@ -29,6 +41,7 @@ void task_move(GtkWidget *button, gpointer data) {
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
     if (gtk_widget_get_first_child(tasks_box)==NULL) {
+       move_task_params->ui_states->first_launch = 1; 
        first_time_launch(tasks_box, operation == 1 ? 1 : 0);
     }
     if (rc != SQLITE_OK )     
@@ -37,10 +50,11 @@ void task_move(GtkWidget *button, gpointer data) {
 }
 
 void task_remove(GtkWidget *button, gpointer data) {
+    struct RemoveTaskArgs *args = data;
     GtkWidget *task_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
     GtkWidget *tasks_box = gtk_widget_get_parent(task_box);
 
-    sqlite3 *db = data;
+    sqlite3 *db = args->db;
     int rc;
     char *err_msg = 0;
     char *sql = malloc(100);
@@ -53,7 +67,9 @@ void task_remove(GtkWidget *button, gpointer data) {
 
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     free(sql);
+
     if (gtk_widget_get_first_child(tasks_box)==NULL) {
+        args->ui_states->first_launch = 1;
         first_time_launch(tasks_box, 1);
     }
 }
@@ -111,10 +127,13 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     GtkWidget *name_and_important_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     GtkStyleContext *context;
 
-    static struct MoveTaskParams move_task_data;
+    static struct MoveTaskArgs move_task_data;
     struct UIStates *ui_states = params->ui_states;
     static struct AddNewTaskParams add_new_task_data;
+    static struct RemoveTaskArgs mv_args;
 
+    mv_args.db = params->db;
+    mv_args.ui_states = ui_states;
     sprintf(string_id, "%d", id);
 
     context = gtk_widget_get_style_context(single_task_box);
@@ -182,7 +201,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
 
     add_new_task_data.tasks_box = tasks_box; add_new_task_data.db = params->db; add_new_task_data.ui_states = ui_states;
 
-    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), params->db);
+    g_signal_connect(task_remove_button, "clicked", G_CALLBACK(task_remove), &mv_args);
     g_signal_connect(importatnt_button, "clicked", G_CALLBACK(toggle_task_importance), params->db);
     g_signal_connect(edit_button, "clicked", G_CALLBACK(add_new_task), &add_new_task_data);
 }
@@ -190,7 +209,6 @@ void data_handler(GtkWidget *button, gpointer data) {
     struct TaskDataParams *add_task_params = data; 
     GtkWidget *dialog; 
     GtkEntryBuffer *task_name_buffer = add_task_params->task_name_buffer;
-    GtkEntryBuffer *task_desc_buffer = add_task_params->task_desc_buffer;
     GtkWidget *window = add_task_params->window;
     GtkWidget *tasks_box = add_task_params->tasks_box;
     GtkWidget *add_task_box = add_task_params->add_task_box;
@@ -199,16 +217,23 @@ void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *child = gtk_widget_get_first_child(tasks_box);
     GtkWidget *parent_box_child = gtk_widget_get_first_child(parent_box);
     const gchar *task_name = gtk_entry_buffer_get_text(task_name_buffer);
-    const gchar *task_desc = gtk_entry_buffer_get_text(task_desc_buffer);
+    const gchar *task_desc;
     sqlite3 *db = add_task_params->db;
     struct UIStates *ui_states = add_task_params->ui_states;
     char *sql = malloc(10000);
     int rc = 0;
     char *err_msg;
+    GtkTextIter start = {0}, end={0};
+    gtk_text_buffer_get_bounds(GTK_TEXT_BUFFER(add_task_params->desc_buffer), &start, &end);
 
+    task_desc = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(\
+                add_task_params->desc_buffer),\
+                &start,\
+                &end,\
+                TRUE);
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
-    if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0) {
+    if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0 || task_desc_len > 2000) {
         char *err_msg;
         if(task_name_len < 1 && task_desc_len < 1) {
             err_msg = "Nie wprowadzono żadnych danych";
@@ -216,7 +241,10 @@ void data_handler(GtkWidget *button, gpointer data) {
             err_msg = "Nie podano nazy zadania";
         } else if (add_task_params->string_date == 0) {
             err_msg = "Nie podano żadnej daty!";
-        } else {
+        } else if (task_desc_len > 2000) {
+            err_msg = "Podano za długi opis zadania";
+        }
+        else {
             err_msg = "Nie podano opisu zadania";
         }
         GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL;
@@ -360,7 +388,7 @@ void date_handler (GtkMenuButton *button, gpointer data) {
         gtk_box_append(GTK_BOX(date_box), GTK_WIDGET(time_label));
         
         if (!ui_states->appended_inform_label) {
-            gtk_box_insert_child_after(GTK_BOX(params->add_task_box), date_box, params->desc_entry);
+            gtk_box_insert_child_after(GTK_BOX(params->add_task_box), date_box, params->desc_box);
             params->params->date_label = date_label;
             params->params->time_label = time_label;
             ui_states->appended_inform_label = 1;
@@ -420,14 +448,21 @@ void add_new_task(GtkWidget *button, gpointer data) {
     GtkWidget *floating_add_button = gtk_widget_get_next_sibling(overlay);
     GtkWidget *popover = gtk_popover_new(), *popover_box, *popover_sub_box;
     GtkWidget *calendar, *spin_button_hour, *spin_button_min, *btn;
-    GtkWidget *fields_box, *task_name_entry, *task_desc_entry, *add_button, *label;
+    GtkWidget *fields_box, *task_name_entry, *add_button, *label;
     GtkWidget *existing_task = gtk_widget_get_first_child(tasks_box);
     GtkWidget *existing_box;
-    GtkEntryBuffer *task_name_buffer = gtk_entry_buffer_new(NULL, 0) , *task_desc_buffer = gtk_entry_buffer_new(NULL, 0);
+    GtkEntryBuffer *task_name_buffer = gtk_entry_buffer_new(NULL, 0);
     sqlite3 *db = add_new_task_params->db;
     static struct TaskDataParams task_data;
     static struct HandleDate date_args;
     struct UIStates *ui_states = add_new_task_params->ui_states;
+    GtkTextBuffer *desc_buffer = gtk_text_buffer_new(NULL);
+    GtkWidget *desc_text_box = gtk_text_view_new_with_buffer(GTK_TEXT_BUFFER(desc_buffer));
+
+    gtk_widget_set_size_request(desc_text_box, -1, 140);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(desc_text_box), GTK_WRAP_WORD_CHAR);
+    gtk_widget_set_name(desc_text_box, "desc_box");
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(desc_buffer), "Bardzo interesujący opis zadania...", -1);
 
     if(ui_states->is_add_task_active==1) return;
 
@@ -464,7 +499,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
         gtk_widget_set_visible(child, false);
         gtk_entry_buffer_set_text(task_name_buffer, task_name, strlen(task_name));
-        gtk_entry_buffer_set_text(task_desc_buffer, task_desc, strlen(task_desc));
+        gtk_text_buffer_set_text(GTK_TEXT_BUFFER(desc_buffer), task_desc, strlen(task_desc));
 
         gtk_box_append(GTK_BOX(existing_box), fields_box);
 
@@ -482,12 +517,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     task_name_entry = gtk_entry_new_with_buffer(task_name_buffer);
     gtk_entry_set_placeholder_text(GTK_ENTRY(task_name_entry), "Nazwa zadania");
 
-    task_desc_entry = gtk_entry_new_with_buffer(task_desc_buffer);
-    gtk_entry_set_placeholder_text(GTK_ENTRY(task_desc_entry), "Opis zadania");
-    
-
     task_data.task_name_buffer = task_name_buffer;
-    task_data.task_desc_buffer = task_desc_buffer;
     task_data.window = window;
     task_data.tasks_box = tasks_box;
     task_data.add_task_box = fields_box;
@@ -497,6 +527,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     task_data.string_date = 0;
     task_data.unix_datetime = 0;
     task_data.ui_states = ui_states;
+    task_data.desc_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(desc_text_box));
 
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
     gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
@@ -504,7 +535,8 @@ void add_new_task(GtkWidget *button, gpointer data) {
 
     gtk_box_append(GTK_BOX(fields_box), label);
     gtk_box_append(GTK_BOX(fields_box), task_name_entry);
-    gtk_box_append(GTK_BOX(fields_box), task_desc_entry);
+    /* gtk_box_append(GTK_BOX(fields_box), task_desc_entry); */
+    gtk_box_append(GTK_BOX(fields_box), desc_text_box);
     gtk_box_append(GTK_BOX(fields_box), add_date_button);
     gtk_box_append(GTK_BOX(fields_box), add_button);
    
@@ -538,7 +570,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     date_args.popover_sub_box = popover_sub_box;
     date_args.popover = popover;
     date_args.params = &task_data;
-    date_args.desc_entry = task_desc_entry;
+    date_args.desc_box = desc_text_box;
     date_args.add_date_button = add_date_button;
     date_args.ui_states = ui_states;
 

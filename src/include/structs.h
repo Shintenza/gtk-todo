@@ -16,7 +16,7 @@ struct ActivateParams {
 };
 struct TaskDataParams {
     GtkEntryBuffer *task_name_buffer;
-    GtkEntryBuffer *task_desc_buffer;
+    GtkTextBuffer *desc_buffer;
     GtkWidget *window;
     GtkWidget *tasks_box;
     GtkWidget *add_task_box;
@@ -60,7 +60,7 @@ struct HandleDate {
     GtkWidget *popover_box;
     GtkWidget *popover_sub_box;
     GtkWidget *add_task_box;
-    GtkWidget *desc_entry;
+    GtkWidget *desc_box;
     GtkWidget *calendar;
     GtkWidget *hour_input;
     GtkWidget *min_input;
@@ -72,12 +72,6 @@ struct HandleDate {
 struct ResetWrongDateAlertBoxParams {
     GtkWidget *warning_label;
     GtkWidget *popover_box;
-    struct UIStates *ui_states;
-};
-struct MoveTaskParams {
-    sqlite3 *db;
-    GtkWidget *tasks_box;
-    int operation;
     struct UIStates *ui_states;
 };
 struct LoadTasksFromDbParams {

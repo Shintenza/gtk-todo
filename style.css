@@ -128,3 +128,13 @@ popover contents {
     color: white;
     font-size: 1.5rem;
 }
+#desc_box {
+    background-color: #282828;
+    color: white;
+    border-radius: 10px;
+    padding: 5px;
+    border: white solid 2px;
+}
+#desc_box *{
+    background-color: #282828;
+}

@@ -13,7 +13,7 @@ int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_na
     int importance = strtol(argv[5], NULL, 10);
     static struct CreateNewTaskBoxParams new_task_box_params;
     
-    ui_states->first_launch = 1;
+    ui_states->first_launch = 0;
 
     new_task_box_params.task_name = argv[1];
     new_task_box_params.task_desc = argv[2];
