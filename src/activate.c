@@ -56,6 +56,8 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
     
     gtk_window_set_title(GTK_WINDOW(window), "TODO APP");
+    gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
+    gtk_window_set_default_size(GTK_WINDOW(window), 900, 550);
 
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_window_set_child(GTK_WINDOW(window), vbox);
