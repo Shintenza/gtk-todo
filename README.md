@@ -58,6 +58,7 @@ Skrótowy opis poszczególnych plików:
 - task_handling.c - plik odpowiedzialny za wszelkie działania związane z dodawaniem/usuwaniem/edytowaniem zadań
 - task_loading.c - plik odpowiedzialny za ładowanie zadań z bazy danych
 - style.css - tutaj zdefiniowany jest wygląd poszczególnych widgetów interfejsu graficznego
+- Makefile - ( ͡° ͜ʖ ͡°)
 
 ## Kompilacja i użytkowanie programu
 
