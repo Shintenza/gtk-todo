@@ -1,10 +1,7 @@
 #include "include/structs.h"
 #include "include/utils_h/messages.h"
 #include "include/utils_h/db_error.h"
-
-#define MAX_ENTRIES 1000
-#define MAX_NAME_LENGTH 125
-#define MAX_DESC_LENGTH 2000
+#include "include/global.h"
 
 struct CliTask {
     int call_id;

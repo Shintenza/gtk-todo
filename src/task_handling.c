@@ -216,7 +216,7 @@ void data_handler(GtkWidget *button, gpointer data) {
     GtkWidget *window = add_task_params->window;
     GtkWidget *tasks_box = add_task_params->tasks_box;
     GtkWidget *add_task_box = add_task_params->add_task_box;
-    GtkWidget *parent_box = gtk_widget_get_parent(gtk_widget_get_parent(button));
+    GtkWidget *parent_box = gtk_widget_get_parent(gtk_widget_get_parent(gtk_widget_get_parent(button)));
     GtkWidget *floating_add_button = add_task_params->floating_add_button;
     GtkWidget *child = gtk_widget_get_first_child(tasks_box);
     GtkWidget *parent_box_child = gtk_widget_get_first_child(parent_box);
@@ -277,6 +277,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         cnt_box_data.date_string = add_task_params->string_date;
         cnt_box_data.db = db;
         cnt_box_data.ui_states = ui_states;
+
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
@@ -308,6 +309,7 @@ void data_handler(GtkWidget *button, gpointer data) {
             sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 0, 0);", task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime);
         }
         ui_states->is_add_task_active = 0;
+        ui_states->appended_inform_label = 0;
         gtk_box_remove(GTK_BOX(add_task_params->right_box), add_task_box);
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
@@ -354,7 +356,7 @@ void date_handler (GtkMenuButton *button, gpointer data) {
     GDateTime *selected_date = g_date_time_new(time_zone, year, month, day, hour, min, 0);
     GDateTime *date_now = g_date_time_new_now(time_zone);
     GtkWidget *warning_label = gtk_label_new("Ustaw poprawną datę!");
-    GtkWidget *date_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
+    GtkWidget *date_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     GtkWidget *inform_label = gtk_label_new("Ustawiono datę: ");
     GtkWidget *date_label = gtk_label_new(date_string);
     GtkWidget *time_label = gtk_label_new(time_string);
@@ -441,6 +443,7 @@ void cancel_adding_new_task(GtkWidget *button, gpointer data){
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
     cancel_params->add_task_params->ui_states->is_add_task_active = 0;
+    cancel_params->add_task_params->ui_states->appended_inform_label = 0;
 
     gtk_widget_set_sensitive(existing_task, true);
     while(gtk_widget_get_next_sibling(existing_task)!=NULL) {
@@ -468,6 +471,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     struct UIStates *ui_states = add_new_task_params->ui_states;
     GtkTextBuffer *desc_buffer = gtk_text_buffer_new(NULL);
     GtkWidget *desc_text_box = gtk_text_view_new_with_buffer(GTK_TEXT_BUFFER(desc_buffer));
+    GtkWidget *v_buttons_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
     gtk_widget_set_size_request(desc_text_box, -1, 140);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(desc_text_box), GTK_WRAP_WORD_CHAR);
@@ -542,15 +546,21 @@ void add_new_task(GtkWidget *button, gpointer data) {
     gtk_menu_button_set_popover(GTK_MENU_BUTTON(add_date_button), GTK_WIDGET(popover));
     gtk_menu_button_set_label(GTK_MENU_BUTTON(add_date_button), "Ustaw datę");
     gtk_menu_button_set_always_show_arrow(GTK_MENU_BUTTON(add_date_button), FALSE);
+    
+    gtk_widget_set_hexpand(v_buttons_box, TRUE);
+    gtk_widget_set_hexpand(add_date_button, FALSE);
+    gtk_widget_set_halign(add_date_button, GTK_ALIGN_START);
+    gtk_widget_set_halign(add_button, GTK_ALIGN_END);
+    gtk_widget_set_name(add_date_button, "date_btn");
 
     gtk_box_append(GTK_BOX(fields_box), label);
     gtk_box_append(GTK_BOX(fields_box), task_name_entry);
-    /* gtk_box_append(GTK_BOX(fields_box), task_desc_entry); */
     gtk_box_append(GTK_BOX(fields_box), desc_text_box);
-    gtk_box_append(GTK_BOX(fields_box), add_date_button);
-    gtk_box_append(GTK_BOX(fields_box), add_button);
+    gtk_box_append(GTK_BOX(fields_box), v_buttons_box);
+    gtk_box_append(GTK_BOX(v_buttons_box), add_date_button);
+    gtk_box_append(GTK_BOX(v_buttons_box), add_button);
    
-    /*locks others tasks interactions while adding a new one*/
+    /*locks others tasks while adding a new one*/
 
     if(strcmp(gtk_widget_get_name(button), "edit_button")!=0) gtk_box_prepend(GTK_BOX(right_box), fields_box);
     ui_states->is_add_task_active = 1;

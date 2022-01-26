@@ -138,3 +138,7 @@ popover contents {
 #desc_box *{
     background-color: #282828;
 }
+#date_btn button:first-child {
+    background-color: #2a7ef5;
+    border: none;
+}
