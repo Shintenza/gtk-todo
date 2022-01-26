@@ -1,5 +1,5 @@
 # GTK TODO APP - Projekt zaliczeniowy z języka C
-
+![Preview](./preview.png)
 
 ## Spis treści:
 1. [Kilka słów o projekcie](#kilka-słów-o-projekcie)
