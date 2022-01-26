@@ -3,6 +3,7 @@
 #include "include/task_handling.h"
 #include "include/utils_h/db_error.h"
 #include "include/utils_h/first_time_launch.h"
+#include "include/global.h"
 
 struct RemoveTaskArgs {
     sqlite3 *db;
@@ -176,10 +177,13 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_halign(task_desc_label, GTK_ALIGN_START);
     gtk_widget_set_halign(task_name_label, GTK_ALIGN_START);
     gtk_widget_set_halign(importatnt_button, GTK_ALIGN_END);
+    gtk_widget_set_valign(importatnt_button, GTK_ALIGN_START);
     gtk_widget_set_halign(edit_button, GTK_ALIGN_START);
     gtk_widget_set_hexpand(task_name_label, TRUE);
     gtk_widget_set_hexpand(name_and_important_box, TRUE);
 
+    gtk_label_set_wrap(GTK_LABEL(task_desc_label), TRUE);
+    gtk_label_set_wrap(GTK_LABEL(task_name_label), TRUE);
     if(ui_states->first_launch==1) {
         ui_states->first_launch = 0;
         destroy_welcome_msg(tasks_box);
@@ -222,8 +226,10 @@ void data_handler(GtkWidget *button, gpointer data) {
     struct UIStates *ui_states = add_task_params->ui_states;
     char *sql = malloc(10000);
     int rc = 0;
-    char *err_msg;
+    char err_msg[200];
+    char *db_err_msg;
     GtkTextIter start = {0}, end={0};
+
     gtk_text_buffer_get_bounds(GTK_TEXT_BUFFER(add_task_params->desc_buffer), &start, &end);
 
     task_desc = gtk_text_buffer_get_text(GTK_TEXT_BUFFER(\
@@ -233,21 +239,25 @@ void data_handler(GtkWidget *button, gpointer data) {
                 TRUE);
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
-    if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0 || task_desc_len > 2000) {
-        char *err_msg;
+    if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0\
+            ||task_desc_len > MAX_DESC_LENGTH\
+            ||task_name_len > MAX_NAME_LENGTH) {
         if(task_name_len < 1 && task_desc_len < 1) {
-            err_msg = "Nie wprowadzono żadnych danych";
+            strcpy(err_msg, "Nie wprowadzono żadnych danych");
         } else if (task_name_len < 1 ) {
-            err_msg = "Nie podano nazy zadania";
+            strcpy(err_msg, "Nie podano nazy zadania");
         } else if (add_task_params->string_date == 0) {
-            err_msg = "Nie podano żadnej daty!";
-        } else if (task_desc_len > 2000) {
-            err_msg = "Podano za długi opis zadania";
+            strcpy(err_msg, "Nie podano żadnej daty!");
+        } else if (task_desc_len > MAX_DESC_LENGTH) {
+            sprintf(err_msg, "Podano za długi opis zadania. Limit to: %d znaków!", MAX_DESC_LENGTH);
+        } else if (task_name_len > MAX_NAME_LENGTH) {
+            sprintf(err_msg, "Podano za długą nazwę zadania. Limit to: %d znaków!", MAX_NAME_LENGTH);
         }
         else {
-            err_msg = "Nie podano opisu zadania";
+            strcpy(err_msg,"Nie podano opisu zadania");
         }
         GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL;
+
         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
                                                 flags, 
                                                 GTK_MESSAGE_ERROR, 
@@ -308,14 +318,14 @@ void data_handler(GtkWidget *button, gpointer data) {
         }
 
     
-        rc = sqlite3_exec(db, sql, 0,0, &err_msg);
+        rc = sqlite3_exec(db, sql, 0,0, &db_err_msg);
         gtk_button_set_label(GTK_BUTTON(floating_add_button), "+");
         gtk_widget_set_name(floating_add_button, "f_add_button");
 
         free(sql);
 
         if (rc!=SQLITE_OK)
-            db_error_handling(&db, &err_msg);
+            db_error_handling(&db, &db_err_msg);
     }
 }
 void date_handler (GtkMenuButton *button, gpointer data) {

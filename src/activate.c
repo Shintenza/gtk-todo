@@ -75,12 +75,12 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_widget_set_name(GTK_WIDGET(side_menu), "side_menu");
    
     right_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_hexpand(GTK_WIDGET(right_box), TRUE);
+    gtk_widget_set_hexpand(GTK_WIDGET(right_box), FALSE);
     gtk_widget_set_vexpand(GTK_WIDGET(right_box), TRUE);
     gtk_widget_set_name(GTK_WIDGET(right_box), "right_box");
 
     tasks_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_hexpand(GTK_WIDGET(tasks_box), TRUE);
+    gtk_widget_set_hexpand(GTK_WIDGET(tasks_box), FALSE);
     gtk_widget_set_vexpand(GTK_WIDGET(tasks_box), TRUE);
     gtk_widget_set_name(GTK_WIDGET(tasks_box), "tasks_box");
     
@@ -104,6 +104,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_box_append(GTK_BOX(main_box), side_menu);
 
     scrolled_window = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_widget_set_hexpand(GTK_WIDGET(scrolled_window), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(scrolled_window), TRUE);
     
