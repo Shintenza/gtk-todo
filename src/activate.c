@@ -54,7 +54,6 @@ void activate(GtkApplication *app, gpointer user_data) {
     static struct LoadTasksFromDbParams load_tasks_params;
     get_css_location(css_location);
     
-    printf("siema %s", css_location);
     gtk_widget_set_name(floating_add_button, "f_add_button");
     gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider), css_location);
     gtk_style_context_add_provider_for_display(display, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);

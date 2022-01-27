@@ -473,10 +473,11 @@ void add_new_task(GtkWidget *button, gpointer data) {
     GtkWidget *desc_text_box = gtk_text_view_new_with_buffer(GTK_TEXT_BUFFER(desc_buffer));
     GtkWidget *v_buttons_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
-    gtk_widget_set_size_request(desc_text_box, -1, 140);
+    gtk_widget_set_size_request(desc_text_box, -1, 120);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(desc_text_box), GTK_WRAP_WORD_CHAR);
     gtk_widget_set_name(desc_text_box, "desc_box");
-    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(desc_buffer), "Bardzo interesujący opis zadania...", -1);
+    gtk_text_view_set_input_purpose(GTK_TEXT_VIEW(desc_text_box), GTK_INPUT_PURPOSE_FREE_FORM);
+    gtk_text_buffer_set_text(GTK_TEXT_BUFFER(desc_buffer), "Opis zadania", -1);
 
     if(ui_states->is_add_task_active==1) return;
 
@@ -525,6 +526,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
         add_button = gtk_button_new_with_label("Dodaj");
     }
     gtk_widget_set_name(GTK_WIDGET(fields_box), "add_task_box");
+    gtk_widget_set_vexpand(fields_box, FALSE);
     
     gtk_widget_set_name(GTK_WIDGET(label), "add_new_task_label");
 

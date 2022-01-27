@@ -12,8 +12,7 @@
 #add_task_box {
     background-color: #282828;
     padding: 10px;
-    color: white;
-}
+    color: white; }
 window {
     background-color: #282828;
 } 
@@ -131,7 +130,7 @@ popover contents {
 #desc_box {
     background-color: #282828;
     color: white;
-    border-radius: 10px;
+    border-radius: 15px;
     padding: 5px;
     border: white solid 2px;
 }
