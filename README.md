@@ -9,11 +9,18 @@
 
 ## Kilka słów o projekcie
 
-Przy wyborze tematu projektu kierowałem się głównie chęcią nauczenia się biblioteki do tworzenia interfejsów graficznych, jaką jest GTK. Todo-like aplikacja była pierwszym pomysłem, który wpadł mi do głowy. Chciałem go zrealizować, ponieważ opiera sie na prostych założeniach i będzie dobrym początkiem do pisania poważniejszych programów w przyszłości. GTK nie jest jedyną biblioteką, z której skorzystałem. Zapis i odczyt zadań jest oparty o bazę danych. Wybór padł tutaj na sqlite3, ponieważ nie wymaga żadnej konfiguracji, a co za tym idzie użytkownik programu nie jest zmuszony do podejmowania żadnych dodatakowych kroków przed jego uruchomieniem. Jako dodatkowe ćwiczenie napisałem także wersję aplikacji sterowaną z wiersza poleceń. Interfejs graficzny doczekał się także swojego własnego arkusza stylów.
+Wybierając temat projektu kierowałem się głownie chęcią nauczenia się biblioteki GTK. Zdecydowałem się napisać todo-like aplikację, 
+ponieważ wydawała się całkiem prosta koncepcjonalnie. Zapis i odczyt wprowadzonych przez użytkownika zadań odbywa się za pomocą relacyjnej
+bazy danych. Nie zdecydowałem się tutaj na zapis i odczyt z pliku tekstowego, ponieważ chciałem (podobnie jak w przypadku GTK) nauczyć się
+obsługi bazy danych z poziomu języka C. Przy wyborze systemu zarządzania bazą padło na sqlite3, ponieważ jest najłatwiejszy w przygotowaniu
+do pracy (wystarczy sama instalacja programu). Dodatkowo, napisałem jeszcze wersję tekstową tego programu, jako dodatkowe ćwiczenie. Jeśli
+chodzi o Makefile, postanowiłem zrealizować go w ten sposób, ponieważ struktura projektu jest dosyć rozległa i nie chciało mi się uwzględniać
+w nim każdego pliku osobno (takie rozwiązanie jest też troche mniej elastyczne i np. zmieniając jakiś plik nagłówkowy musimy kompilować wszystko
+od nowa). W ramach projektu przypomniałem sobie także, jak działają kaskadowe arkusze stylów ;)
 
-## Zależności
+## Wykorzystane nardzędzia/biblioteki
 
-Do poprawnego działania programu wymagane są poniższe zależności:
+Do stworzenia tego projektu użyłem poniższych narzędzi/bibliotek (wyjaśnienie ich obecności w projekcie znajduje się sekcję wyżej):
 
 - [GTK4](https://gitlab.gnome.org/GNOME/gtk)
 - [sqlite3](https://www.sqlite.org/index.html)
