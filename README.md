@@ -35,6 +35,7 @@ Wszystkie z powyższych zależności dostępne są chyba dla każdej dystrybucji
 ├── compile_commands.json
 ├── Makefile
 ├── obj
+├── preview.png
 ├── README.md
 ├── src
 │   ├── activate.c
@@ -44,18 +45,29 @@ Wszystkie z powyższych zależności dostępne są chyba dla każdej dystrybucji
 │   │   ├── activate.h
 │   │   ├── cli_handling.h
 │   │   ├── db_init.h
-│   │   ├── messages.h
+│   │   ├── global.h
+│   │   ├── main.h
 │   │   ├── structs.h
 │   │   ├── task_handling.h
-│   │   └── task_loading.h
+│   │   ├── task_loading.h
+│   │   └── utils_h
+│   │       ├── db_error.h
+│   │       ├── first_time_launch.h
+│   │       ├── get_main_dir.h
+│   │       ├── initial_task_loading.h
+│   │       └── messages.h
 │   ├── main.c
-│   ├── messages.c
 │   ├── task_handling.c
-│   └── task_loading.c
+│   ├── task_loading.c
+│   └── utils
+│       ├── db_error.c
+│       ├── first_time_launch.c
+│       ├── get_main_dir.c
+│       └── messages.c
 └── style.css
 ```
 
-Skrótowy opis poszczególnych plików:
+Skrótowy opis ważniejszych plików:
 - compile_commands.json - plik potrzebny do pracy z [clangd](https://clangd.llvm.org/) i moim edytorem tekstu [nvim-code](https://gitea.shintenza.tk/Shintenza/nvim-code.git)
 - activate.c - tutaj tworzona jest baza interfejsu graficznego 
 - db_init.c - plik odpowiedzialny za inicjalizację bazy danych
@@ -77,7 +89,9 @@ ArchLinux:
 Debian:
 > sudo apt install libsqlite3-dev libgtk-4-dev make gcc
 
-Po zainstalowaniu odpowiednich zależności należy uruchomić komendę make w głównym folderze projektu. Plik binarny znajduje się w folderze bin. Uruchomienie tego pliku bez żadnych argumentów, wystartuje graficzną wersję aplikacji. Podanie argumentów skutkuje uruchomieniem wersji cli programu:
+Po zainstalowaniu odpowiednich zależności należy uruchomić komendę make (cel install też jest dostępny) w głównym folderze projektu. Plik 
+binarny znajduje się w folderze bin. Uruchomienie tego pliku bez żadnych argumentów, wystartuje graficzną wersję aplikacji. Podanie 
+argumentów skutkuje uruchomieniem wersji cli programu:
 
 ```
 ./bin/c_todo --help
