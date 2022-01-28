@@ -112,7 +112,7 @@ void delete_handling (int argc, char **argv, int tasks_array_len, int first_fini
             free(return_message);
             return;
         }
-    } else if (argc == 3 && check_if_flag_exists(argc, argv, "-Ao")) {
+    } else if (argc == 3 && check_if_flag_exists(argc, argv, "-x")) {
         for (i = 0; i<tasks_array_len; i++) {
             if (tasks_arr[i].finished == 1) {
                 sprintf(sql, "DELETE FROM tasks WHERE rowid=%d", tasks_arr[i].rowid);
@@ -123,11 +123,11 @@ void delete_handling (int argc, char **argv, int tasks_array_len, int first_fini
                     db_error_handling(&db, &db_error_msg);
                 }
             }
-            sprintf(return_message, "Pomyślnie usunięto zadanie: %s z bazy danych!\n", tasks_arr[i].name);
-            free(sql);
-            free(return_message);
-            return;
         }
+        sprintf(return_message, "Pomyślnie usunięto zadanie: %s z bazy danych!\n", tasks_arr[i].name);
+        free(sql);
+        free(return_message);
+        return;
     } else if (argc == 3) {
         user_given_id = strtol(argv[2], &error, 10);
         if (*error!='\0') {
