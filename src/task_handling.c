@@ -181,9 +181,14 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_widget_set_halign(edit_button, GTK_ALIGN_START);
     gtk_widget_set_hexpand(task_name_label, TRUE);
     gtk_widget_set_hexpand(name_and_important_box, TRUE);
+    gtk_widget_set_hexpand(task_desc_label, FALSE);
+    gtk_widget_set_hexpand(single_task_box, FALSE);
 
     gtk_label_set_wrap(GTK_LABEL(task_desc_label), TRUE);
     gtk_label_set_wrap(GTK_LABEL(task_name_label), TRUE);
+    gtk_label_set_wrap_mode(GTK_LABEL(task_desc_label), PANGO_WRAP_WORD_CHAR);
+    gtk_label_set_wrap_mode(GTK_LABEL(task_name_label), PANGO_WRAP_WORD_CHAR);
+    gtk_label_set_natural_wrap_mode(GTK_LABEL(task_desc_label), GTK_NATURAL_WRAP_WORD);
     if(ui_states->first_launch==1) {
         ui_states->first_launch = 0;
         destroy_welcome_msg(tasks_box);
