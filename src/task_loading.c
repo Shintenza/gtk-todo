@@ -36,9 +36,9 @@ void load_tasks_from_db (sqlite3 *given_db, GtkWidget *tasks_box, char *importan
     int tasks_counter = 0;
 
     if( strcmp(importance, "normal") == 0 && finished == 0 ) {
-       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0"; 
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 0 ORDER BY date ASC"; 
     } else if ( finished == 1 ) {
-       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1"; 
+       sql = "SELECT rowid, task_name, task_desc, date_string, date, importance, finished FROM tasks WHERE finished = 1 ORDER BY date ASC"; 
     }
 
     struct LoadTasksFromDbParams callback_args;

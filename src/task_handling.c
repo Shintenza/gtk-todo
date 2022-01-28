@@ -282,6 +282,7 @@ void data_handler(GtkWidget *button, gpointer data) {
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
+
             /*removes first letter from char array*/
             memmove(rowid, rowid+1, strlen(rowid));
 
@@ -301,7 +302,6 @@ void data_handler(GtkWidget *button, gpointer data) {
                 gtk_widget_set_visible(parent_box_child, true);
                 parent_box_child = gtk_widget_get_next_sibling(parent_box_child);
             }
-            ui_states->edit_mode = 0;
             gtk_widget_set_visible(gtk_widget_get_last_child(parent_box), true);
             sprintf(sql, "UPDATE tasks SET task_name = '%s', task_desc = '%s', date_string = '%s', date = '%ld' WHERE rowid = %s",\
                     task_name, task_desc, add_task_params->string_date, add_task_params->unix_datetime, rowid);
@@ -311,7 +311,8 @@ void data_handler(GtkWidget *button, gpointer data) {
         }
         ui_states->is_add_task_active = 0;
         ui_states->appended_inform_label = 0;
-        gtk_box_remove(GTK_BOX(add_task_params->right_box), add_task_box);
+        if (ui_states->edit_mode == 0) gtk_box_remove(GTK_BOX(add_task_params->right_box), add_task_box);
+        ui_states->edit_mode = 0;
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
         gtk_widget_set_sensitive(child, true);
