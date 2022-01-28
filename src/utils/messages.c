@@ -21,7 +21,9 @@ char* help_message() {
             -a (domyślne) - wypisuje wszystkie aktywne zadania do pliku\n\
             -o - wypisuje wszystkie zadania archiwalne do pliku\n\
             [Składnia]\n\
-            c_todo -W [dostępne flagi] [ścieżka, gdzie ma być zapisany plik]\n\
+                c_todo -W [dostępne flagi] [ścieżka, gdzie ma być zapisany plik]\n\
             [Przykładowe użycie]\n\
-            c_todo -w -o ~/zadanka_archiwalne\n";
+                c_todo -w -o ~/zadanka_archiwalne\n\
+            [Informacje dodatkowe]\n\
+                Program samodzielnie dopisuje .md na końcu pliku (złośliwym zamienia inne rozszerzenia na markdown).\n";
 }

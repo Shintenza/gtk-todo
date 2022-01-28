@@ -28,16 +28,10 @@ void task_move(GtkWidget *button, gpointer data) {
     char *sql = malloc(100);
     const char *element_id = gtk_widget_get_name(task_box);
 
-    switch (operation) {
-        case 1:
-            sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %s", element_id);
-            break;
-        case 2:
-            sprintf(sql, "UPDATE tasks SET finished = 0 WHERE rowid = %s", element_id);
-            break;
-        default:
-            sprintf(sql, "DELETE FROM tasks WHERE rowid = %s", element_id);
-    }
+    if (operation == 1) 
+        sprintf(sql, "UPDATE tasks SET finished = 1 WHERE rowid = %s", element_id);
+    else if (operation == 2)
+        sprintf(sql, "UPDATE tasks SET finished = 0 WHERE rowid = %s", element_id);
 
     gtk_box_remove(GTK_BOX(tasks_box), task_box);
     rc = sqlite3_exec(db, sql, 0, 0, &err_msg);
@@ -189,6 +183,7 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_label_set_wrap_mode(GTK_LABEL(task_desc_label), PANGO_WRAP_WORD_CHAR);
     gtk_label_set_wrap_mode(GTK_LABEL(task_name_label), PANGO_WRAP_WORD_CHAR);
     gtk_label_set_natural_wrap_mode(GTK_LABEL(task_desc_label), GTK_NATURAL_WRAP_WORD);
+
     if(ui_states->first_launch==1) {
         ui_states->first_launch = 0;
         destroy_welcome_msg(tasks_box);
@@ -244,6 +239,7 @@ void data_handler(GtkWidget *button, gpointer data) {
                 TRUE);
     int task_name_len = strlen(task_name);
     int task_desc_len = strlen(task_desc);
+
     if(task_name_len < 1 || task_desc_len < 1 || add_task_params->string_date == 0\
             ||task_desc_len > MAX_DESC_LENGTH\
             ||task_name_len > MAX_NAME_LENGTH) {
@@ -509,7 +505,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
         GtkWidget *desc_label = gtk_widget_get_next_sibling(date_label);
         const char *task_name = gtk_label_get_text(GTK_LABEL(name_label));
         const char *task_desc = gtk_label_get_text(GTK_LABEL(desc_label));
-        /* const char *task_date = gtk_label_get_text(GTK_LABEL(desc_label)); */
 
         while(gtk_widget_get_next_sibling(child)!=NULL){
             gtk_widget_set_visible(child, false);

@@ -14,9 +14,9 @@ ponieważ wydawała się całkiem prosta koncepcjonalnie. Zapis i odczyt wprowa
 bazy danych. Nie zdecydowałem się tutaj na zapis i odczyt z pliku tekstowego, ponieważ chciałem (podobnie jak w przypadku GTK) nauczyć się
 obsługi bazy danych z poziomu języka C. Przy wyborze systemu zarządzania bazą padło na sqlite3, ponieważ jest najłatwiejszy w przygotowaniu
 do pracy (wystarczy sama instalacja programu). Dodatkowo, napisałem jeszcze wersję tekstową tego programu, jako dodatkowe ćwiczenie. Jeśli
-chodzi o Makefile, postanowiłem zrealizować go w ten sposób, ponieważ struktura projektu jest dosyć rozległa i nie chciało mi się uwzględniać
-w nim każdego pliku osobno (takie rozwiązanie jest też troche mniej elastyczne i np. zmieniając jakiś plik nagłówkowy musimy kompilować wszystko
-od nowa). W ramach projektu przypomniałem sobie także, jak działają kaskadowe arkusze stylów ;)
+chodzi o zawartość pliku Makfile, to zdecydowałem się na takie rozwiązanie, ponieważ jest wygodniejsze w przypadu większej liczby plików
+źródłowych (ma też swoje minusy, jak np. ponowna kompilacja całego projektu po zmianie plików nagłówkowych). W ramach projektu przypomniałem 
+sobie także, jak działają kaskadowe arkusze stylów, co było potrzebne do ostylowania aplikacji graficznej.
 
 ## Wykorzystane nardzędzia/biblioteki
 
@@ -89,7 +89,7 @@ ArchLinux:
 Debian:
 > sudo apt install libsqlite3-dev libgtk-4-dev make gcc
 
-Po zainstalowaniu odpowiednich zależności należy uruchomić komendę make (cel install też jest dostępny) w głównym folderze projektu. Plik 
+Po zainstalowaniu odpowiednich zależności należy uruchomić komendę make (cel install także jest dostępny) w głównym folderze projektu. Plik 
 binarny znajduje się w folderze bin. Uruchomienie tego pliku bez żadnych argumentów, wystartuje graficzną wersję aplikacji. Podanie 
 argumentów skutkuje uruchomieniem wersji cli programu:
 

@@ -57,9 +57,9 @@ void dump_to_file (struct CliTask *tasks, int mode, int arr_len, char *path) {
     }
     for (i = 0; i<arr_len; i++) {
         if (tasks[i].finished == mode) {
-            sprintf(buffer, "## %s\n", tasks[i].name);
+            mode == 0 ? sprintf(buffer, "# Lista zadań aktywnych\n\n## %s\n", tasks[i].name) : sprintf(buffer, "# Lista zadań archiwalnych\n\n## %s\n", tasks[i].name);
             fputs(buffer, file);
-            sprintf(buffer, "# Zaplanowano na: %s\n", tasks[i].string_time);
+            sprintf(buffer, "### Zaplanowano na: %s\n", tasks[i].string_time);
             fputs(buffer, file);
             sprintf(buffer, "%s\n\n", tasks[i].description);
             fputs(buffer, file);

@@ -3,6 +3,7 @@
 #include "include/utils_h/db_error.h"
 #include "include/global.h"
 #include "include/utils_h/dump_to_file.h"
+#include "include/utils_h/date_validator.h"
 
 struct CliLoadTaskParams {
     struct CliTask *tasks_arr;
@@ -209,9 +210,10 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     char user_input[4];
     char day_string[3], month_string[3], year_string[5], hours_string[3], minutes_string[3];
     char *error;
+    int err_counter = 0;
     int day, month, year, hours, minutes;
     int i;
-    struct tm time;
+    struct tm time_stamp = {0};
     time_t epoch;
     char *sql = malloc(MAX_NAME_LENGTH+MAX_DESC_LENGTH+17+15);
     char *db_error_msg = 0;
@@ -255,28 +257,39 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
         return;
     }
     strcpy(task_date, argv[found_flags[2]+1]);
+    extract_from_datestring(task_date, day_string, month_string, year_string, hours_string, minutes_string);
 
-    /*Error handling has to be done!!!*/
-    strncpy(day_string, &task_date[0], 2);
     day = strtol(day_string, &error, 10);
-    strncpy(month_string, &task_date[3], 2);
+    if (*error != '\0') err_counter++;
     month = strtol(month_string, &error, 10);
-    strncpy(year_string, &task_date[6], 4);
+    if (*error != '\0') err_counter++;
     year = strtol(year_string, &error, 10);
-    strncpy(hours_string, &task_date[11], 2);
+    if (*error != '\0') err_counter++;
     hours = strtol(hours_string, &error, 10);
-    strncpy(minutes_string, &task_date[14], 2);
+    if (*error != '\0') err_counter++;
     minutes = strtol(minutes_string, &error, 10);
+    if (*error != '\0') err_counter++;
+    
+    if (err_counter > 0) {
+        fprintf(stderr, "Wprowadzono nieprawidłową datę!\n");
+        exit(1);
+    }
 
+    date_validator(day, month, year, hours, minutes);
+    time_stamp.tm_mday = day; time_stamp.tm_mon = month-1; time_stamp.tm_year = year-1900; time_stamp.tm_hour = hours; time_stamp.tm_min = minutes; time_stamp.tm_sec = 0;
+    epoch = mktime(&time_stamp);
+    
+    if (epoch < time(NULL)) {
+        fprintf(stderr, "Nie potrafię podróżować w czasie, a w szczególności w przeszłość!\n");
+        exit(1);
+    }
     printf("Podsumowanie dodawania nowego zadania:\n\nNazwa zadania: %s\nOpis zadania: %s\nWprowadzony czas: %s\nCzy podane informacje się zgadzają? Wpisz tak lub nie: ", task_name, task_desc, task_date);
     fgets(user_input, 4, stdin);
-
+    
     if (strcmp(user_input, "tak")!=0) {
         return;
     } 
-    time.tm_mday = day; time.tm_mon = month; time.tm_year = year; time.tm_hour = hours; time.tm_min = minutes; time.tm_sec = 0;
 
-    epoch = mktime(&time);
     sprintf(sql, "INSERT INTO tasks VALUES ('%s', '%s', '%s', %lu, 'normal', 0);", task_name, task_desc, task_date, epoch);
     rc = sqlite3_exec(db, sql, NULL, NULL, &db_error_msg);
     if (rc!=SQLITE_OK) {
