@@ -51,16 +51,19 @@ Wszystkie z powyższych zależności dostępne są chyba dla każdej dystrybucji
 │   │   ├── task_handling.h
 │   │   ├── task_loading.h
 │   │   └── utils_h
+│   │       ├── date_validator.h
 │   │       ├── db_error.h
+│   │       ├── dump_to_file.h
 │   │       ├── first_time_launch.h
 │   │       ├── get_main_dir.h
-│   │       ├── initial_task_loading.h
 │   │       └── messages.h
 │   ├── main.c
 │   ├── task_handling.c
 │   ├── task_loading.c
 │   └── utils
+│       ├── date_validator.c
 │       ├── db_error.c
+│       ├── dump_to_file.c
 │       ├── first_time_launch.c
 │       ├── get_main_dir.c
 │       └── messages.c
