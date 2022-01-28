@@ -55,9 +55,10 @@ void dump_to_file (struct CliTask *tasks, int mode, int arr_len, char *path) {
         fprintf(stderr, "Nie mam uprawnień żeby to zrobić!\n");
         exit(1);
     }
+    fputs("# Lista zadań aktywnych\n\n", file);
     for (i = 0; i<arr_len; i++) {
         if (tasks[i].finished == mode) {
-            mode == 0 ? sprintf(buffer, "# Lista zadań aktywnych\n\n## %s\n", tasks[i].name) : sprintf(buffer, "# Lista zadań archiwalnych\n\n## %s\n", tasks[i].name);
+            mode == 0 ? sprintf(buffer, "## %s\n", tasks[i].name) : sprintf(buffer, "# Lista zadań archiwalnych\n\n## %s\n", tasks[i].name);
             fputs(buffer, file);
             sprintf(buffer, "### Zaplanowano na: %s\n", tasks[i].string_time);
             fputs(buffer, file);
