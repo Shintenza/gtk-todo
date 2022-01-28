@@ -16,5 +16,12 @@ char* help_message() {
     -d, D archiwizowanie/kasowanie zadań\n\
             -n (domyślne) - archiwizowanie po numerze zadania (dotyczy zadań aktywnych)\n\
             -b - archiwizowanie po id z bazy danych (jeżeli podano id zadania ukończonego zostanie ono usunięte na stale z bazy)\n\
-            -Ao - kasowanie wszystkich zadań archiwalnych\n";
+            -Ao - kasowanie wszystkich zadań archiwalnych\n\
+    -w, W wypisanie zadań do pliku w formacie markdown\n\
+            -a (domyślne) - wypisuje wszystkie aktywne zadania do pliku\n\
+            -o - wypisuje wszystkie zadania archiwalne do pliku\n\
+            [Składnia]\n\
+            c_todo -W [dostępne flagi] [ścieżka, gdzie ma być zapisany plik]\n\
+            [Przykładowe użycie]\n\
+            c_todo -w -o ~/zadanka_archiwalne\n";
 }

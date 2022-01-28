@@ -2,6 +2,7 @@
 #define STRUCTS_H
 #include <gtk/gtk.h>
 #include <sqlite3.h>
+#include "global.h"
 
 struct UIStates {
     int is_add_task_active;
@@ -84,5 +85,15 @@ struct LoadTasksFromDbParams {
 struct ToggleTaskImportance {
     sqlite3 *db;
     const char *widget_name;
+};
+struct CliTask {
+    int call_id;
+    int rowid;
+    char name[MAX_NAME_LENGTH];
+    char description[MAX_DESC_LENGTH];
+    char string_time[MAX_NAME_LENGTH];
+    long long unix_time;
+    int finished;
+    char response_msg[1000];
 };
 #endif

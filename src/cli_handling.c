@@ -2,17 +2,8 @@
 #include "include/utils_h/messages.h"
 #include "include/utils_h/db_error.h"
 #include "include/global.h"
+#include "include/utils_h/dump_to_file.h"
 
-struct CliTask {
-    int call_id;
-    int rowid;
-    char name[MAX_NAME_LENGTH];
-    char description[MAX_DESC_LENGTH];
-    char string_time[MAX_NAME_LENGTH];
-    long long unix_time;
-    int finished;
-    char response_msg[1000];
-};
 struct CliLoadTaskParams {
     struct CliTask *tasks_arr;
     int *entries_counter;
@@ -295,6 +286,15 @@ void adding_handling (int argc, char **argv, sqlite3 *db){
     printf("Pomyślnie dodano nowe zadanie!!!\n");
     free(sql);
 }
+void write_to_file (int argc, int arr_len, char **argv, struct CliTask *tasks_arr){
+    int mode = 0;
+    char path[500];
+    if (check_if_flag_exists(argc, argv, "-o")) {
+        mode = 1;
+    }
+    realpath(argv[argc-1], path);
+    dump_to_file(tasks_arr, mode, arr_len, path);
+}
 /* core of cli */
 int cli_handling (int argc, char **argv, sqlite3 *given_db) {
     sqlite3 *db = given_db;
@@ -316,6 +316,8 @@ int cli_handling (int argc, char **argv, sqlite3 *given_db) {
         delete_handling(argc, argv, tasks_array_len, first_finished_task, tasks_arr, db);
     } else if(strcmp(main_flag, "-A")==0 || strcmp(main_flag, "-a")==0){
         adding_handling(argc, argv, db);
+    } else if(strcmp(main_flag, "-W")==0 || strcmp(main_flag, "-w")==0) {
+        write_to_file(argc, tasks_array_len, argv, tasks_arr);
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
         exit(1);
