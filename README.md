@@ -71,7 +71,7 @@ Wszystkie z powyższych zależności dostępne są chyba dla każdej dystrybucji
 ```
 
 Skrótowy opis ważniejszych plików:
-- compile_commands.json - plik potrzebny do pracy z [clangd](https://clangd.llvm.org/) i moim edytorem tekstu [nvim-code](https://gitea.shintenza.tk/Shintenza/nvim-code.git)
+- compile_commands.json - plik potrzebny do pracy z [clangd](https://clangd.llvm.org/) i moim edytorem tekstu [nvim-code](https://github.com/Shintenza/nvim-code)
 - activate.c - tutaj tworzona jest baza interfejsu graficznego 
 - db_init.c - plik odpowiedzialny za inicjalizację bazy danych
 - cli_handling.c - wersja cli programu
