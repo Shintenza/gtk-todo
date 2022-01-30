@@ -1,5 +1,5 @@
-#ifndef TASK_LOADING
-#define TASK_LOADING
+#ifndef TASK_LOADING_H
+#define TASK_LOADING_H
 #include <gtk/gtk.h>
 #include "../include/structs.h"
 int load_tasks_from_db_callback (void *args, int argc, char **argv, char**col_name);

@@ -3,6 +3,7 @@
 #include <sqlite3.h>
 
 #include "include/structs.h"
+#include "include/utils_h/genv_detect.h"
 #include "include/activate.h"
 #include "include/db_init.h"
 #include "include/cli_handling.h"
@@ -25,6 +26,7 @@ int main(int argc, char **argv) {
     if (argc >= 2) {
         cli_handling(argc, argv, db);
     }
+    genv_detect();
 
     app = gtk_application_new ("org.gtk.example", G_APPLICATION_FLAGS_NONE);
     g_signal_connect (app, "activate", G_CALLBACK (activate), &activate_params);

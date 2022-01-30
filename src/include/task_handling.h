@@ -1,5 +1,5 @@
-#ifndef TASK_HANDLING
-#define TASK_HANDLING
+#ifndef TASK_HANDLING_H
+#define TASK_HANDLING_H
 #include <gtk/gtk.h>
 #include "../include/structs.h"
 

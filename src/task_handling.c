@@ -182,7 +182,6 @@ void create_new_task_box(struct CreateNewTaskBoxParams *params, int id) {
     gtk_label_set_wrap(GTK_LABEL(task_name_label), TRUE);
     gtk_label_set_wrap_mode(GTK_LABEL(task_desc_label), PANGO_WRAP_WORD_CHAR);
     gtk_label_set_wrap_mode(GTK_LABEL(task_name_label), PANGO_WRAP_WORD_CHAR);
-    gtk_label_set_natural_wrap_mode(GTK_LABEL(task_desc_label), GTK_NATURAL_WRAP_WORD);
 
     if(ui_states->first_launch==1) {
         ui_states->first_launch = 0;
@@ -279,6 +278,15 @@ void data_handler(GtkWidget *button, gpointer data) {
         cnt_box_data.db = db;
         cnt_box_data.ui_states = ui_states;
 
+        if (child!=NULL) {
+            gtk_widget_set_sensitive(child, true);
+
+            while(gtk_widget_get_next_sibling(child)!=NULL) {
+                child = gtk_widget_get_next_sibling(child);
+                gtk_widget_set_sensitive(child, true);
+            }
+        }
+
         if (strchr(gtk_widget_get_name(parent_box), 'e')!=NULL) {
             char rowid[100];
             sprintf(rowid, "%s", gtk_widget_get_name(parent_box));
@@ -315,11 +323,6 @@ void data_handler(GtkWidget *button, gpointer data) {
         ui_states->edit_mode = 0;
         gtk_widget_set_sensitive(GTK_WIDGET(tasks_box), true);
 
-        gtk_widget_set_sensitive(child, true);
-        while(gtk_widget_get_next_sibling(child)!=NULL) {
-            child = gtk_widget_get_next_sibling(child);
-            gtk_widget_set_sensitive(child, true);
-        }
 
     
         rc = sqlite3_exec(db, sql, 0,0, &db_err_msg);
@@ -487,7 +490,7 @@ void add_new_task(GtkWidget *button, gpointer data) {
     gtk_widget_set_name(floating_add_button, "f_add_button_red");
 
     gtk_widget_set_sensitive(existing_task, false);
-    while(gtk_widget_get_next_sibling(existing_task)!=NULL) {
+    while(gtk_widget_get_first_child(tasks_box)!=NULL && gtk_widget_get_next_sibling(existing_task)!=NULL) {
         existing_task = gtk_widget_get_next_sibling(existing_task);
         gtk_widget_set_sensitive(existing_task, false);
     }
@@ -563,8 +566,6 @@ void add_new_task(GtkWidget *button, gpointer data) {
     gtk_box_append(GTK_BOX(v_buttons_box), add_date_button);
     gtk_box_append(GTK_BOX(v_buttons_box), add_button);
    
-    /*locks others tasks while adding a new one*/
-
     if(strcmp(gtk_widget_get_name(button), "edit_button")!=0) gtk_box_prepend(GTK_BOX(right_box), fields_box);
     ui_states->is_add_task_active = 1;
 
