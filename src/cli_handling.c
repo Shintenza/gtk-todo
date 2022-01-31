@@ -305,6 +305,10 @@ void write_to_file (int argc, int arr_len, char **argv, struct CliTask *tasks_ar
     if (check_if_flag_exists(argc, argv, "-o")) {
         mode = 1;
     }
+    if ((argc-mode)<3 || argc > 3+mode) {
+        fprintf(stderr, "Niepoprawna składnia polecenia! Zapoznaj się z --help!\n");
+        exit(-1);
+    }
     realpath(argv[argc-1], path);
     dump_to_file(tasks_arr, mode, arr_len, path);
 }
