@@ -1,2 +1,0 @@
-# Lista zadań aktywnych
-

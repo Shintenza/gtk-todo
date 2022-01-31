@@ -322,6 +322,7 @@ void change_default_db_dest (int argc, char **argv) {
     FILE *file;
     char username[30];
     struct stat st = {0};
+    sqlite3 *test_db;
     
     if (check_if_flag_exists(argc, argv, "-n")) {
         printf("Obecne położenie bazy danych: %s\n", get_db_path());
@@ -341,9 +342,25 @@ void change_default_db_dest (int argc, char **argv) {
     if (stat(path_to_cache, &st) == -1) {
         mkdir(path_to_cache, 0755);
     }
-    
     realpath(argv[2], path_to_db);
     realpath(argv[3], new_location);
+
+    /*tutaj musiło się podziac cos dziwnego */
+    rc = sqlite3_open(path_to_db, &test_db);
+    if (rc!=SQLITE_OK) {
+        fprintf(stderr, "Podano niepoprawny plik");
+        sqlite3_close(test_db);
+        exit(1);
+    }
+    /* dopiero przy zapytaniu do bazy danych pojawia sie problem nieprawidlowej bazy danych */
+    rc = sqlite3_exec(test_db, "SELECT * FROM tasks", 0, 0, NULL); 
+    if (rc!=SQLITE_OK) {
+        fprintf(stderr, "Podano niepoprawny plik");
+        sqlite3_close(test_db);
+        exit(1);
+    }
+    sqlite3_close(test_db);
+
     rc = rename(path_to_db, new_location);
     if (rc < 0) {
         fprintf(stderr, "Nie udało mi się przenieść bazy danych! Sprawdź czy podany plik już nie istnieje lub czy masz odpowiedni dostęp\n");
