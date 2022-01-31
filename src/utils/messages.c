@@ -25,5 +25,12 @@ char* help_message() {
             [Przykładowe użycie]\n\
                 c_todo -w -o ~/zadanka_archiwalne\n\
             [Informacje dodatkowe]\n\
-                Program samodzielnie dopisuje .md na końcu pliku (złośliwym zamienia inne rozszerzenia na markdown).\n";
+                Program samodzielnie dopisuje .md na końcu pliku (złośliwym zamienia inne rozszerzenia na markdown).\n\
+    -F, f zmiana położnia bazy danych z plikami\n\
+            -n - obecne położenie pliku z zadaniami (zwrócenie nazwy todo.db oznacza położenie domyślne)\n\
+            [Przykładowe użycie]\n\
+            c_todo -F stara/ścieżka/do_pliku/todo.db nowa/ścieżka/do_pliku/todo.db (zmiana położenia bazy danycj)\n\
+            c_todo -F -n (sprawdzenie obecnej ścieżki do bazy danych)\n\
+            [Dodatkowe informacje]\n\
+            Pamiętaj aby przy podawaniu ścieżki do nowego położenia bazy zakończyć ją faktyczną nazwą pliku (nie musi to być todo.db)\n";
 }

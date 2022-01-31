@@ -1,15 +1,15 @@
 #include "include/structs.h"
 #include <gtk/gtk.h>
 #include <sqlite3.h>
+#include "include/utils_h/get_main_dir.h"
 
 int db_init(sqlite3 **given_db) {
     sqlite3 *db;
     char *err_msg = 0;
-    int rc = sqlite3_open("./todo.db", &db);
+    int rc = sqlite3_open(get_db_path(), &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot connect to the database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        return 1;
     }
     char *sql = "CREATE TABLE IF NOT EXISTS tasks (task_name TEXT, \
                                                    task_desc TEXT, \
@@ -22,7 +22,7 @@ int db_init(sqlite3 **given_db) {
         fprintf(stderr, "SQL err, %s\n", sqlite3_errmsg(db));
         sqlite3_free(err_msg);
         sqlite3_close(db);
-        return 1;
+        exit(1);
     }
     *given_db = db;
     return 0;

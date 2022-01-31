@@ -4,6 +4,8 @@
 #include "include/global.h"
 #include "include/utils_h/dump_to_file.h"
 #include "include/utils_h/date_validator.h"
+#include "include/utils_h/get_main_dir.h"
+#include <sys/stat.h>
 
 struct CliLoadTaskParams {
     struct CliTask *tasks_arr;
@@ -312,6 +314,46 @@ void write_to_file (int argc, int arr_len, char **argv, struct CliTask *tasks_ar
     realpath(argv[argc-1], path);
     dump_to_file(tasks_arr, mode, arr_len, path);
 }
+void change_default_db_dest (int argc, char **argv) {
+    char path_to_db[500];
+    char new_location[500];
+    char path_to_cache[500];
+    int rc;
+    FILE *file;
+    char username[30];
+    struct stat st = {0};
+    
+    if (check_if_flag_exists(argc, argv, "-n")) {
+        printf("Obecne położenie bazy danych: %s\n", get_db_path());
+        exit(0);
+    }
+    if (argc!=4) {
+        fprintf(stderr, "Niepoprawna składnia polecenia! Zapoznaj się z treścią polecenia --help!\n");
+        exit(1);
+    }
+    getlogin_r(username, sizeof(username));
+    if (strlen(username) <= 0) {
+        fprintf(stderr, "Coś poszło nie tak!\n");
+        exit(-1);
+    }
+    sprintf(path_to_cache, "/home/%s/.cache", username);
+
+    if (stat(path_to_cache, &st) == -1) {
+        mkdir(path_to_cache, 0755);
+    }
+    
+    realpath(argv[2], path_to_db);
+    realpath(argv[3], new_location);
+    rc = rename(path_to_db, new_location);
+    if (rc < 0) {
+        fprintf(stderr, "Nie udało mi się przenieść bazy danych! Sprawdź czy podany plik już nie istnieje lub czy masz odpowiedni dostęp\n");
+        exit(1);
+    }
+
+    strcat(path_to_cache, "/c_todo_location");
+    file = fopen(path_to_cache, "w+");
+    fputs(new_location, file);
+}
 /* core of cli */
 int cli_handling (int argc, char **argv, sqlite3 *given_db) {
     sqlite3 *db = given_db;
@@ -335,6 +377,8 @@ int cli_handling (int argc, char **argv, sqlite3 *given_db) {
         adding_handling(argc, argv, db);
     } else if(strcmp(main_flag, "-W")==0 || strcmp(main_flag, "-w")==0) {
         write_to_file(argc, tasks_array_len, argv, tasks_arr);
+    } else if (strcmp(main_flag, "-F")==0 || strcmp(main_flag, "-f")==0) {
+        change_default_db_dest(argc, argv);
     } else {
         printf("Niepoprawna składnia polecenia! Wpisz --help, aby zapoznać się z dozwolonymi poleceniami!\n");
         exit(1);
