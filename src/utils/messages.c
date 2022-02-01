@@ -28,9 +28,14 @@ char* help_message() {
                 Program samodzielnie dopisuje .md na końcu pliku (złośliwym zamienia inne rozszerzenia na markdown).\n\
     -F, f zmiana położnia bazy danych z plikami\n\
             -n - obecne położenie pliku z zadaniami (zwrócenie nazwy todo.db oznacza położenie domyślne)\n\
+            -c - ustawienie kompletnie nowej lokalizacji bazy danych\n\
             [Przykładowe użycie]\n\
-            c_todo -F stara/ścieżka/do_pliku/todo.db nowa/ścieżka/do_pliku/todo.db (zmiana położenia bazy danycj)\n\
-            c_todo -F -n (sprawdzenie obecnej ścieżki do bazy danych)\n\
+                c_todo -F stara/ścieżka/do_pliku/todo.db nowa/ścieżka/do_pliku/todo.db (zmiana położenia bazy danycj)\n\
+                c_todo -F -n (sprawdzenie obecnej ścieżki do bazy danych)\n\
+                c_todo -F -c <jakaś ścieżka> (komenda tworzy wskazany plik jeśli nie istnieje, albo jeśli już istnieje, używa istniejącego)\n\
             [Dodatkowe informacje]\n\
-            Pamiętaj aby przy podawaniu ścieżki do nowego położenia bazy zakończyć ją faktyczną nazwą pliku (nie musi to być todo.db)\n";
+            Reasumując wywołwanie komendy -F bez żadnych innych flag służy do migracji obecnie używanej bazy danych do innego miejsca\n\
+            (możemy też ustawić nową nazwę pliku). Należy pamiętać, że w pierwszym argumencie musimy wskazać plik wcześniej używany przez program.\n\
+            Dodając flagę -c zmieniamy kompletnie plik który ma być używany jako baza danych. Możemy wówczas wskazać już istniejący plik\n\
+            bazy danych (pod warunkiem, że faktycznie jest plikiem działającym z sqlite3) lub podać kompletnie nowy!\n";
 }

@@ -318,6 +318,8 @@ void change_default_db_dest (int argc, char **argv) {
     char path_to_db[500];
     char new_location[500];
     char path_to_cache[500];
+    char buffer[500];
+    int mode = 0;
     int rc;
     FILE *file;
     char username[30];
@@ -327,6 +329,9 @@ void change_default_db_dest (int argc, char **argv) {
     if (check_if_flag_exists(argc, argv, "-n")) {
         printf("Obecne położenie bazy danych: %s\n", get_db_path());
         exit(0);
+    }
+    if (check_if_flag_exists(argc, argv, "-c")) {
+        mode = 1;
     }
     if (argc!=4) {
         fprintf(stderr, "Niepoprawna składnia polecenia! Zapoznaj się z treścią polecenia --help!\n");
@@ -342,34 +347,46 @@ void change_default_db_dest (int argc, char **argv) {
     if (stat(path_to_cache, &st) == -1) {
         mkdir(path_to_cache, 0755);
     }
-    realpath(argv[2], path_to_db);
-    realpath(argv[3], new_location);
+    realpath(argv[2+mode], path_to_db);
 
-    /*tutaj musiło się podziac cos dziwnego */
-    rc = sqlite3_open(path_to_db, &test_db);
-    if (rc!=SQLITE_OK) {
-        fprintf(stderr, "Podano niepoprawny plik");
+    if (!mode || (mode==1 && fopen(path_to_db, "r"))){
+        rc = sqlite3_open(path_to_db, &test_db);
+        if (rc!=SQLITE_OK) {
+            fprintf(stderr, "Podano niepoprawny plik\n");
+            sqlite3_close(test_db);
+            exit(1);
+        }
+        rc = sqlite3_exec(test_db, "SELECT * FROM tasks", 0, 0, NULL); 
+        if (rc!=SQLITE_OK) {
+            if (mode == 0) {
+                fprintf(stderr, "Podano niepoprawny plik");
+                sqlite3_close(test_db);
+                exit(1);
+            }
+        }
         sqlite3_close(test_db);
-        exit(1);
-    }
-    /* dopiero przy zapytaniu do bazy danych pojawia sie problem nieprawidlowej bazy danych */
-    rc = sqlite3_exec(test_db, "SELECT * FROM tasks", 0, 0, NULL); 
-    if (rc!=SQLITE_OK) {
-        fprintf(stderr, "Podano niepoprawny plik");
-        sqlite3_close(test_db);
-        exit(1);
-    }
-    sqlite3_close(test_db);
-
-    rc = rename(path_to_db, new_location);
-    if (rc < 0) {
-        fprintf(stderr, "Nie udało mi się przenieść bazy danych! Sprawdź czy podany plik już nie istnieje lub czy masz odpowiedni dostęp\n");
-        exit(1);
     }
 
     strcat(path_to_cache, "/c_todo_location");
-    file = fopen(path_to_cache, "w+");
-    fputs(new_location, file);
+    if (mode == 0) {
+        realpath(argv[3+mode], new_location);
+        fgets(buffer, sizeof(buffer), fopen(path_to_cache, "r"));
+        if (strcmp(path_to_db, buffer) != 0) {
+            fprintf(stderr, "To nie jest stary plik bazy danych!\n");
+            exit(1);
+        }
+        rc = rename(path_to_db, new_location);
+        if (rc < 0) {
+            fprintf(stderr, "Nie udało mi się przenieść bazy danych! Sprawdź czy podany plik już nie istnieje lub czy masz odpowiedni dostęp\n");
+            exit(1);
+        }
+
+        file = fopen(path_to_cache, "w+");
+        fputs(new_location, file);
+    } else {
+        file = fopen(path_to_cache, "w+");
+        fputs(path_to_db, file);
+    }
 }
 /* core of cli */
 int cli_handling (int argc, char **argv, sqlite3 *given_db) {

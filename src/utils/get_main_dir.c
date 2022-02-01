@@ -13,7 +13,7 @@ const char *get_db_path() {
     sprintf(cache_location, "/home/%s/.cache/c_todo_location", username);
     if ((dest = fopen(cache_location, "r"))) {
         fgets(db_location, sizeof(db_location), dest);
-        if (strlen(db_location) > 0 && fopen(db_location, "r")) {
+        if (strlen(db_location) > 0) {
             return db_location;
         }
     }
