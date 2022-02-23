@@ -1,5 +1,5 @@
 # GTK TODO APP 
-[Preview](./preview.png)
+![Preview](./preview.png)
 
 ## Dependencies 
 
